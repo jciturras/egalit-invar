@@ -1,0 +1,583 @@
+---
+title: "Preparación de datos"
+date: "`r format(Sys.time(), '%A %d %B %Y %X')`"
+output:
+  html_document:
+    toc: yes
+    toc_float:
+      collapsed: yes
+      smooth_scroll: no
+      number_sections: yes
+    code_folding: hide
+    number_sections: yes
+editor_options:
+  chunk_output_type: console
+---
+
+# Setup
+
+```{r setup}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+options(scipen=9999) # desactivar notacion cientifica
+remove(list = ls()) #limpieza del entorno de trabajo
+```
+
+```{css, echo=FALSE}
+# /* expandir el espacio del documento*/
+body .main-container {
+      max-width: 1600px !important;
+      width: 1600px !important;
+    }
+#/* expandir width de la TOC*/
+div.tocify {
+    width: 22% !important;
+    max-width: 331px !important;
+    max-height: 102% !important;
+}
+```
+
+# Análisis descriptivo 
+
+```{r tab-count}
+#Tabla por países, escuelas y estudiantes
+rm(list=ls())
+if (!require("pacman")) install.packages("pacman") # instalar pacman
+                            # cargar librerias
+pacman::p_load(dplyr,       # Manipulacion de datos
+               car,         # recodificar variables
+               sjlabelled,  # etiquetado de variables
+               sjmisc,      # descriptivos y frecuencias
+               sjPlot,      # tablas, plots y descriptivos
+               knitr,
+               kableExtra
+               )
+load(file = here::here("input/data-proc/study_1.RData"))
+
+df_countries <- df_study %>% na.omit()
+countries <- df_countries %>% group_by(country_name,IDSCHOOL) %>% summarise(count=n())
+schools <- countries %>% group_by(country_name) %>% summarise(schools=n())
+students <- df_countries %>% group_by(country_name) %>% summarise(students=n())
+
+tab_countries <- left_join(schools,students)
+tab_countries %>% 
+  kable(col.names = c("País","Total de escuelas","Total de estudiantes"),
+        booktabs = T,
+        caption = "Muestra de países participantes en ICCS",
+        format.args = list(big.mark = ".")) %>%
+  kable_styling(full_width = F) %>% 
+  footnote(general = paste0("Elaboración propia en base a datos de ICSS 2016","(N = ", 
+                            format(dim(df_countries)[1], big.mark = "."),")"),
+           general_title = "Nota: ",
+           footnote_as_chunk = T,
+           threeparttable = T)
+```
+
+```{r tab-gender}
+# Tabla de variables: genero
+rm(list=ls())
+if (!require("pacman")) install.packages("pacman") # instalar pacman
+                            # cargar librerias
+pacman::p_load(dplyr,       # Manipulacion de datos
+               car,         # recodificar variables
+               sjlabelled,  # etiquetado de variables
+               sjmisc,      # descriptivos y frecuencias
+               sjPlot,      # tablas, plots y descriptivos
+               knitr,
+               kableExtra
+               )
+load(file = here::here("input/data-proc/study_1.RData"))
+df_countries <- df_study %>% na.omit()
+
+df_gender <- 
+df_countries %>% 
+  select(starts_with("IS3G24")) %>% 
+  get_label() %>% 
+  data.frame()  
+df_gender$items <- tolower(rownames(df_gender))
+df_gender <- select(df_gender,items,".")
+  
+  df_gender %>% 
+  kable(col.names = c("Código ICCS","Apoyo de los estudiantes a la igualdad de género"),
+        booktabs = T,
+        row.names = F,
+        caption = "Muestra de países participantes en ICCS") %>%
+  kable_styling(full_width = F) %>% 
+  footnote(general = paste0("Elaboración propia en base a datos de ICSS 2016. ","(N = ", 
+                            format(dim(df_countries)[1], big.mark = "."),")",
+  ". La escala de respuesta utilizada corresponde a (1) Muy de acuerdo; (2) De acuerdo; (3) En desacuerdo; (4) Totalmente en desacuerdo. ® Items invertidos"),
+           general_title = "Nota: ",
+           footnote_as_chunk = T,
+           threeparttable = T)
+```
+
+```{r cor-gender, fig.cap="Matriz de correlaciones policóricas para Apoyo de los estudiantes a la igualdad de género"}
+#Correlacion indicadores genero
+rm(list=ls())
+if (!require("pacman")) install.packages("pacman") # instalar pacman
+                            # cargar librerias
+pacman::p_load(dplyr,       # Manipulacion de datos
+               car,         # recodificar variables
+               sjlabelled,  # etiquetado de variables
+               sjmisc,      # descriptivos y frecuencias
+               sjPlot,      # tablas, plots y descriptivos
+               knitr,
+               kableExtra, 
+               lavaan
+               )
+load(file = here::here("input/data-proc/study_1.RData"))
+
+df_countries <- df_study %>% na.omit()
+df_gender <- 
+ df_countries %>% 
+   select(starts_with("IS3G24"))
+
+for (i in names(df_countries %>% select(IS3G24A,IS3G24B,IS3G24E))) {
+  df_countries[[i]] <- sjmisc::rec(df_countries[[i]],rec = "rev")
+}
+
+  # generate polychoric matrix
+  cor_gender<- df_countries %>%
+    dplyr::select(starts_with("IS3G24")) %>%
+    lavaan::lavCor(., ordered=names(.))
+  
+  diag(cor_gender) = NA
+
+  rownames(cor_gender) <-c(
+      "A. Hombres/Mujeres igualdad en gobierno ®",
+      "B. Hombres/Mujeres mismos derechos ®",
+      "C. Mujeres permanerer fuera de la política",
+      "D. Trabajo, prioridad para hombres",
+      "E. Hombres/mujeres igualdad salarial ®",
+      "F. Hombres mejores lideres políticos"
+  )
+  colnames(cor_gender) <-c("(A)", "(B)","(C)","(D)","(E)","(F)")
+
+  corrplot::corrplot(cor_gender,
+    method = "color",
+    addCoef.col = "#000390",
+    type = "upper",
+    tl.col = "black",
+    col=colorRampPalette(c("white","#0068DC"))(8),
+    bg = "white",
+    na.label = "-")
+```
+
+```{r tab-nacion}
+# Tabla de variables: actitud pais
+rm(list=ls())
+if (!require("pacman")) install.packages("pacman") # instalar pacman
+                            # cargar librerias
+pacman::p_load(dplyr,       # Manipulacion de datos
+               car,         # recodificar variables
+               sjlabelled,  # etiquetado de variables
+               sjmisc,      # descriptivos y frecuencias
+               sjPlot,      # tablas, plots y descriptivos
+               knitr,
+               kableExtra
+               )
+load(file = here::here("input/data-proc/study_1.RData"))
+df_countries <- df_study %>% na.omit()
+
+df_country <- 
+df_countries %>% 
+  select(starts_with("IS3G27")) %>% 
+  get_label() %>% 
+  data.frame()  
+df_country$items <- tolower(rownames(df_country))
+df_country <- select(df_country,items,".")
+  
+  df_country %>% 
+  kable(col.names = c("Código ICCS","Actitudes positivas de los estudiantes hacia su país de residencia"),
+        booktabs = T,
+        row.names = F,
+        caption = "Muestra de países participantes en ICCS") %>%
+  kable_styling(full_width = F) %>% 
+  footnote(general = paste0("Elaboración propia en base a datos de ICSS 2016. ","(N = ", 
+                            format(dim(df_countries)[1], big.mark = "."),")",
+  ". La escala de respuesta utilizada corresponde a (1) Muy de acuerdo; (2) De acuerdo; (3) En desacuerdo; (4) Totalmente en desacuerdo."),
+           general_title = "Nota: ",
+           footnote_as_chunk = T,
+           threeparttable = T)
+
+```
+
+```{r cor-nacion, fig.cap="Matriz de correlaciones policóricas para actitudes positivas de los estudiantes hacia su país de residencia"}
+rm(list=ls())
+if (!require("pacman")) install.packages("pacman") # instalar pacman
+                            # cargar librerias
+pacman::p_load(dplyr,       # Manipulacion de datos
+               car,         # recodificar variables
+               sjlabelled,  # etiquetado de variables
+               sjmisc,      # descriptivos y frecuencias
+               sjPlot,      # tablas, plots y descriptivos
+               knitr,
+               kableExtra
+               )
+load(file = here::here("input/data-proc/study_1.RData"))
+df_countries <- df_study %>% na.omit()
+
+df_country <- 
+df_countries %>% 
+  select(starts_with("IS3G27"))
+
+  # generate polychoric matrix
+  cor_county<- df_countries %>%
+    dplyr::select(starts_with("IS3G27")) %>%
+    lavaan::lavCor(., ordered=names(.))
+  
+  diag(cor_county) = NA
+
+  rownames(cor_county) <-c(
+      "A. Bandera del país es importante",
+      "B. Respeto hacia el país",
+      "C. Orgullo por logros del país",
+      "D. Orgullo vivir en país",
+      "E. País mejor que otros países"
+  )
+  colnames(cor_county) <-c("(A)", "(B)","(C)","(D)","(E)")
+
+  corrplot::corrplot(cor_county,
+    method = "color",
+    addCoef.col = "#000390",
+    type = "upper",
+    tl.col = "black",
+    col=colorRampPalette(c("white","#0068DC"))(8),
+    bg = "white",
+    na.label = "-")
+```
+
+# Análisis multivariado
+
+## Igualdad de género {-}
+
+```{r cfa-genero}
+# Analisis Factorial Confirmatorio: Genero
+rm(list=ls())
+if (!require("pacman")) install.packages("pacman") # instalar pacman
+                            # cargar librerias
+pacman::p_load(dplyr,       # Manipulacion de datos
+               car,         # recodificar variables
+               sjlabelled,  # etiquetado de variables
+               sjmisc,      # descriptivos y frecuencias
+               sjPlot,      # tablas, plots y descriptivos
+               knitr,
+               kableExtra, 
+               lavaan
+               )
+load(file = here::here("input/data-proc/study_1.RData"))
+
+df_countries <- df_study %>% na.omit()
+df_gender <- 
+ df_countries %>% 
+   select(starts_with("IS3G24"))
+
+for (i in names(df_countries %>% select(IS3G24A,IS3G24B,IS3G24E))) {
+  df_countries[[i]] <- sjmisc::rec(df_countries[[i]],rec = "rev")
+}
+
+names(df_gender)
+
+# CFA 1 dimension:.............................................................
+
+cfa_gen1 <- '
+  eqgen=~ IS3G24A+IS3G24B+IS3G24C+IS3G24D+IS3G24E+IS3G24F
+'
+fit_gen1 <- cfa(cfa_gen1,data = df_gender)
+
+# lavaan::fitmeasures(fit_gen1)[c("chisq","df","cfi","tli","rmsea")]
+
+# CFA 2 dimension:.............................................................
+
+# Evidence from previous analyses (Miranda & Castillo, 2018) indicates that the gender equality scale would consider up of two dimensions: support for equal political rights between men and women and attitudes towards the ability to participate in public space
+
+cfa_gen2 <- '
+  eqpol=~ IS3G24A+IS3G24B+IS3G24E
+  eqpub=~ IS3G24C+IS3G24D+IS3G24F 
+  '
+fit_gen2 <- cfa(cfa_gen2,
+                data = df_gender)
+
+# lavaan::fitmeasures(fit_gen2)[c("chisq","df","cfi","tli","rmsea")]
+
+
+  # extract fit indices from models and add to table
+  sum_fit<- dplyr::bind_rows(lavaan::fitmeasures(fit_gen1)[c("chisq","df","cfi","tli","rmsea")],
+                             lavaan::fitmeasures(fit_gen2)[c("chisq","df","cfi","tli","rmsea")])
+
+  # Customize object
+  sum_fit$mod <- c("1","2")
+  sum_fit$nobs <- c(nobs(fit_gen1),nobs(fit_gen2))
+  sum_fit$est <- c("ML","ML")
+  sum_fit <- dplyr::select(sum_fit,mod,nobs,est,everything())
+  colnames <- c("Dimensiones","$N$","Estimador","$\\chi^2$","gl","CFI","TLI","RMSEA")
+
+  # Create table
+  table_cfa_fits <-
+    kable(
+      sum_fit,
+      # format=table_format,
+      digits = 3,
+      booktabs = T,
+      col.names = colnames,
+      caption = "Resumen de ajuste según número de dimensiones para modelo de medición de Igualdad de género ",
+      escape = FALSE
+    ) %>% 
+    kable_styling(full_width = F,
+                  font_size = 10,
+                  latex_options = "HOLD_position",
+                  bootstrap_options=c("striped", "bordered"))
+  table_cfa_fits 
+```
+
+```{r cfa-gen1-count}
+# Analisis Factorial Confirmatorio: Genero
+rm(list=ls())
+if (!require("pacman")) install.packages("pacman") # instalar pacman
+                            # cargar librerias
+pacman::p_load(dplyr,       # Manipulacion de datos
+               car,         # recodificar variables
+               sjlabelled,  # etiquetado de variables
+               sjmisc,      # descriptivos y frecuencias
+               sjPlot,      # tablas, plots y descriptivos
+               knitr,
+               kableExtra, 
+               lavaan
+               )
+load(file = here::here("input/data-proc/study_1.RData"))
+
+df_countries <- df_study %>% na.omit()
+df_gender <- 
+ df_countries %>% 
+   select(starts_with("IS3G24"),
+          country,
+          country_name)
+
+for (i in names(df_countries %>% select(IS3G24A,IS3G24B,IS3G24E))) {
+  df_countries[[i]] <- sjmisc::rec(df_countries[[i]],rec = "rev")
+}
+
+# CFA 1 dimension:.............................................................
+
+cfa_gen1 <- '
+  eqgen=~ IS3G24A+IS3G24B+IS3G24C+IS3G24D+IS3G24E+IS3G24F
+'
+
+# estimar modelo por paises
+df_paises <- split(df_gender, df_gender$country_name)
+results = lapply(df_paises, function(df_gender) lavaan::cfa(cfa_gen1,data = df_gender))
+
+#extraer fitmeasures por paises
+results_list<- lapply(results, function(results) data.frame(t(lavaan::fitmeasures(results)[c("chisq","df","cfi","tli","rmsea")])))
+#extraer nobs por paises
+nobs_list <- lapply(results, function(results) data.frame(obs=t(lavaan::nobs(results))))
+nobs_n <- data.table::rbindlist(nobs_list) %>% 
+  mutate(country=names(nobs_list)) %>%
+  select(country,everything())
+
+  # extract fit indices from models and add to table
+  sum_fit <- 
+  data.table::rbindlist(results_list) %>% 
+  mutate(country=names(results_list)) %>% 
+  select(country,everything())
+  # Customize object
+  sum_fit$nobs <- nobs_n$obs
+  sum_fit <- dplyr::select(sum_fit,country,"chisq","df", nobs,"cfi","tli","rmsea")
+  colnames <- c("País","$\\chi^2$","gl","$N$","CFI","TLI","RMSEA")
+  # Create table
+  tab_cfa_count_1d <-
+    kable(
+      sum_fit,
+      # format=table_format,
+      digits = 3,
+      booktabs = T,
+      col.names = colnames,
+      caption = "Resumen de ajuste según países para modelo de medición de Igualdad de género (una dimensión)",
+      escape = FALSE
+    ) %>% 
+    kable_styling(full_width = F,
+                  font_size = 10,
+                  latex_options = "HOLD_position",
+                  bootstrap_options=c("striped", "bordered"))
+  tab_cfa_count_1d 
+```
+
+```{r cfa-gen2-count}
+# Analisis Factorial Confirmatorio: Genero
+rm(list=ls())
+if (!require("pacman")) install.packages("pacman") # instalar pacman
+                            # cargar librerias
+pacman::p_load(dplyr,       # Manipulacion de datos
+               car,         # recodificar variables
+               sjlabelled,  # etiquetado de variables
+               sjmisc,      # descriptivos y frecuencias
+               sjPlot,      # tablas, plots y descriptivos
+               knitr,
+               kableExtra, 
+               lavaan
+               )
+load(file = here::here("input/data-proc/study_1.RData"))
+
+df_countries <- df_study %>% na.omit()
+df_gender <- 
+ df_countries %>% 
+   select(starts_with("IS3G24"),
+          country,
+          country_name)
+
+for (i in names(df_countries %>% select(IS3G24A,IS3G24B,IS3G24E))) {
+  df_countries[[i]] <- sjmisc::rec(df_countries[[i]],rec = "rev")
+}
+
+# CFA 2 dimension:.............................................................
+
+# Evidence from previous analyses (Miranda & Castillo, 2018) indicates that the gender equality scale would consider up of two dimensions: support for equal political rights between men and women and attitudes towards the ability to participate in public space
+
+cfa_gen2 <- '
+  eqpol=~ IS3G24A+IS3G24B+IS3G24E
+  eqpub=~ IS3G24C+IS3G24D+IS3G24F 
+  '
+
+# estimar modelo por paises
+df_paises <- split(df_gender, df_gender$country_name)
+results = lapply(df_paises, function(df_gender) lavaan::cfa(cfa_gen2,data = df_gender))
+
+#extraer fitmeasures por paises
+results_list<- lapply(results, function(results) data.frame(t(lavaan::fitmeasures(results)[c("chisq","df","cfi","tli","rmsea")])))
+#extraer nobs por paises
+nobs_list <- lapply(results, function(results) data.frame(obs=t(lavaan::nobs(results))))
+nobs_n <- data.table::rbindlist(nobs_list) %>% 
+  mutate(country=names(nobs_list)) %>%
+  select(country,everything())
+
+  # extract fit indices from models and add to table
+  sum_fit <- 
+  data.table::rbindlist(results_list) %>% 
+  mutate(country=names(results_list)) %>% 
+  select(country,everything())
+  # Customize object
+  sum_fit$nobs <- nobs_n$obs
+  sum_fit <- dplyr::select(sum_fit,country,"chisq","df", nobs,"cfi","tli","rmsea")
+  colnames <- c("País","$\\chi^2$","gl","$N$","CFI","TLI","RMSEA")
+  # Create table
+  tab_cfa_count_2d <-
+    kable(
+      sum_fit,
+      # format=table_format,
+      digits = 3,
+      booktabs = T,
+      col.names = colnames,
+      caption = "Resumen de ajuste según países para modelo de medición de Igualdad de género (dos dimensiones)",
+      escape = FALSE
+    ) %>% 
+    kable_styling(full_width = F,
+                  font_size = 10,
+                  latex_options = "HOLD_position",
+                  bootstrap_options=c("striped", "bordered"))
+  tab_cfa_count_2d 
+```
+
+```{r inv-genero}
+
+```
+
+## Actitudes país de residencia {-}
+
+```{r}
+rm(list=ls())
+if (!require("pacman")) install.packages("pacman") # instalar pacman
+                            # cargar librerias
+pacman::p_load(dplyr,       # Manipulacion de datos
+               car,         # recodificar variables
+               sjlabelled,  # etiquetado de variables
+               sjmisc,      # descriptivos y frecuencias
+               sjPlot,      # tablas, plots y descriptivos
+               knitr,
+               kableExtra,
+               lavaan
+               )
+load(file = here::here("input/data-proc/study_1.RData"))
+df_countries <- df_study %>% na.omit()
+
+df_country <- 
+df_countries %>% 
+  select(starts_with("IS3G27"))
+
+# names(df_country)
+# CFA 5 items:.............................................................
+
+cfa_count1 <- '
+  country=~ IS3G27A+IS3G27B+IS3G27C+IS3G27D+IS3G27E
+'
+fit_count1 <- cfa(cfa_count1,data = df_country)
+
+# lavaan::fitmeasures(fit_count1)[c("chisq","df","cfi","tli","rmsea")]
+
+# CFA 4 items (sin E) :.............................................................
+
+cfa_count2 <- '
+  country=~ IS3G27A+IS3G27B+IS3G27C+IS3G27D
+'
+fit_count2 <- cfa(cfa_count2,
+                  data = df_country)
+
+# lavaan::fitmeasures(fit_count2)[c("chisq","df","cfi","tli","rmsea")]
+
+
+# CFA 4 items (sin A) :.............................................................
+
+cfa_count3 <- '
+  country=~ IS3G27B+IS3G27C+IS3G27D+IS3G27E
+'
+fit_count3 <- cfa(cfa_count3,
+                  data = df_country)
+
+# lavaan::fitmeasures(fit_count3)[c("chisq","df","cfi","tli","rmsea")]
+
+  # extract fit indices from models and add to table
+  sum_fit<- dplyr::bind_rows(lavaan::fitmeasures(fit_count1)[c("chisq","df","cfi","tli","rmsea")],
+                             lavaan::fitmeasures(fit_count2)[c("chisq","df","cfi","tli","rmsea")])
+
+  # Customize object
+  sum_fit$mod <- c("Escala completa",
+                   "Escala sin (E)")
+  sum_fit$nobs <- c(nobs(fit_gen1),nobs(fit_gen2))
+  sum_fit$est <- c("ML","ML")
+  sum_fit <- dplyr::select(sum_fit,mod,nobs,est,everything())
+  colnames <- c("Dimensiones","$N$","Estimador","$\\chi^2$","gl","CFI","TLI","RMSEA")
+
+  # Create table
+  table_cfa_fits <-
+    kable(
+      sum_fit,
+      # format=table_format,
+      digits = 3,
+      booktabs = T,
+      col.names = colnames,
+      caption = "Resumen de ajuste según número de dimensiones para modelo de medición de Igualdad de género ",
+      escape = FALSE
+    ) %>% 
+    kable_styling(full_width = F,
+                  font_size = 10,
+                  latex_options = "HOLD_position",
+                  bootstrap_options=c("striped", "bordered"))
+  table_cfa_fits 
+```
+
+```{r inv-pais}
+
+```
+
+## Modelos
+
+- variable bruta iccs 
+- variable latente original
+- variable latente refinada
+- correlación de 24 países actitude~educación, indicador compuesto S_HiSCED (polychoric corr)
+- 
+
+
+

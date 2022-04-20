@@ -1,0 +1,334 @@
+---
+title: "Preparación de datos"
+date: "`r format(Sys.time(), '%A %d %B %Y %X')`"
+output:
+  html_document:
+    toc: yes
+    toc_float:
+      collapsed: yes
+      smooth_scroll: no
+      number_sections: yes
+    code_folding: hide
+    number_sections: yes
+editor_options:
+  chunk_output_type: console
+---
+
+# Setup
+
+```{r setup}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+options(scipen=9999) # desactivar notacion cientifica
+remove(list = ls()) #limpieza del entorno de trabajo
+```
+
+```{css, echo=FALSE}
+# /* expandir el espacio del documento*/
+body .main-container {
+      max-width: 1600px !important;
+      width: 1600px !important;
+    }
+#/* expandir width de la TOC*/
+div.tocify {
+    width: 22% !important;
+    max-width: 331px !important;
+    max-height: 102% !important;
+}
+```
+
+## Librerías
+
+```{r}
+if (!require("pacman")) install.packages("pacman") # instalar pacman
+                            # cargar librerias
+pacman::p_load(dplyr,       # Manipulacion de datos
+               car,         # recodificar variables
+               sjlabelled,  # etiquetado de variables
+               sjmisc,      # descriptivos y frecuencias
+               sjPlot,      # tablas, plots y descriptivos
+               summarytools,# resumen de dataframe
+               stringr,     # manejo de vector de caracteres
+               survey,      # diseno muestral complejo
+               ggrepel,     # etiquetas en ggplo2
+               tidyverse,    # ggplot2 + librerias complementarias
+               countrycode,
+               ISOcodes
+               )
+```
+
+# Datos
+```{r}
+# load databases
+df_names<- list.files(path = "input/data-original/ICCS2016_IDB_SPSS/Data/",pattern = "ISG")
+df_list <- list()
+for(i in df_names){
+  datatmp <- haven::read_sav(file = paste0("input/data-original/ICCS2016_IDB_SPSS/Data/",i))
+  listtmp = datatmp[]
+  df_list <- append(df_list, list(listtmp))
+}
+df_iccs <- data.table::rbindlist(df_list)
+
+sjmisc::frq(df_iccs$COUNTRY) #ISO 3166
+df_iccs$country <- df_iccs$COUNTRY
+# Belgium (Flemish) BFL 56001  | recode to BEL
+# North Rhine-Westphalia (Germany) DNW 276001 | recode to DEU
+df_iccs$country[df_iccs$country=="BFL"] <- "BEL"
+df_iccs$country[df_iccs$country=="DNW"] <- "DEU"
+df_iccs$country_name <- countrycode(sourcevar = df_iccs$country,
+            origin = "iso3c",
+            destination = 'cldr.name.es',
+            nomatch = '00 ERROR')
+
+sjmisc::frq(df_iccs$country_name)
+# sjPlot::tab_xtab(df_iccs$country_name,df_iccs$COUNTRY)
+# view_df(df_iccs)
+```
+
+# Preparación 
+* IS3G24A	Rights and Responsibilities/Roles women and men/Men and women should have equal opportunities to take part in government
+* IS3G24B	Rights and Responsibilities/Roles women and men/Men and women should have the same rights in every way
+* IS3G24C	Rights and Responsibilities/Roles women and men/Women should stay out of politics
+* IS3G24D	Rights and Responsibilities/Roles women and men/Not many jobs available, men should have more right to a job than women
+* IS3G24E	Rights and Responsibilities/Roles women and men/Men and women should get equal pay when they are doing the same jobs
+* IS3G24F	Rights and Responsibilities/Roles women and men/Men are better qualified to be political leaders than women
+* IS3G24G	Rights and Responsibilities/Roles women and men/Women’s first priority should be raising children
+
+```{r eval=FALSE, include=FALSE}
+items.gender <- 
+df_iccs %>% 
+  select(
+    IDSTUD,
+    IS3G24A,
+    IS3G24B,
+    IS3G24C,
+    IS3G24D,
+    IS3G24E,
+    IS3G24F,
+    IS3G24G
+  ) %>% 
+  # na.omit() %>% 
+  drop_labels(drop.na = T) %>% 
+  data.frame()
+
+set_label(items.gender)  <-   str_remove_all(string = sjlabelled::get_label(items.gender),
+                 pattern = "Rights and Responsibilities/Roles women and men/")
+
+labs_1 <- c("Muy de acuerdo","De acuerdo","En desacuerdo","Muy en desacuerdo")
+for (i in names(items.gender %>% select(starts_with("IS3")))) {
+  items.gender[[i]] <- sjlabelled::set_labels(items.gender[[i]],labels = labs_1)
+  items.gender[[i]] <- sjmisc::rec(items.gender[[i]],rec = "rev")
+}
+
+set_label(items.gender$IS3G24A)<- 'Los hombres y las mujeres deben tener igualdad de oportunidades para participar en el gobierno.'
+set_label(items.gender$IS3G24B)<- 'Los hombres y las mujeres deben tener los mismos derechos en todos los sentidos.'
+set_label(items.gender$IS3G24C)<- 'Las mujeres deben permanecer fuera de la política.'
+set_label(items.gender$IS3G24D)<- 'No hay muchos puestos de trabajo disponibles, los hombres deben tener más derecho a un trabajo que las mujeres.'
+set_label(items.gender$IS3G24E)<- 'Los hombres y las mujeres deben obtener la igualdad de salario cuando están haciendo los mismos trabajos.'
+set_label(items.gender$IS3G24F)<- 'Los hombres están mejor calificados para ser líderes políticos que las mujeres.'
+set_label(items.gender$IS3G24G)<- 'La primera prioridad de las mujeres debe estar criando a los niños.'
+
+sjPlot::plot_likert(items.gender %>% select(starts_with("IS3")),
+                    sort.frq = "pos.asc",reverse.scale = T)
+```
+
+* IS3G27A	Institutions and Society/<Country of test>/The <flag of country of test> is important to me
+* IS3G27B	Institutions and Society/<Country of test>/I have great respect for <country of test>
+* IS3G27C	Institutions and Society/<Country of test>/In <country of test> we should be proud of what we have achieved
+* IS3G27D	Institutions and Society/<Country of test>/I am proud to live in <country of test>
+* IS3G27E	Institutions and Society/<Country of test>/<Country of test> is a better country to live in than most other countries
+
+```{r eval=FALSE, include=FALSE}
+items.country <- 
+df_iccs %>% 
+  select(
+    IDSTUD,    
+    IS3G27A,
+    IS3G27B,
+    IS3G27C,
+    IS3G27D,
+    IS3G27E
+  ) %>% 
+  # na.omit() %>% 
+  drop_labels(drop.na = T) %>% 
+  data.frame()
+
+set_label(items.country)  <-   str_remove_all(string = sjlabelled::get_label(items.country),
+                 pattern = "Institutions and Society/<Country of test>/")
+
+labs_2 <- c("Muy de acuerdo","De acuerdo","En desacuerdo","Muy en desacuerdo")
+for (i in names(items.country %>% select(starts_with("IS3")))) {
+  items.country[[i]] <- sjlabelled::set_labels(items.country[[i]],labels = labs_2)
+  items.country[[i]] <- sjmisc::rec(items.country[[i]],rec = "rev")
+}
+
+set_label(items.country$IS3G27A) <- 'La <bandera del país de prueba> es importante para mí'
+set_label(items.country$IS3G27B) <- 'Tengo gran respeto por <país de prueba>'
+set_label(items.country$IS3G27C) <- 'En <país de prueba> deberíamos estar orgullosos de lo que hemos logrado'
+set_label(items.country$IS3G27D) <- 'Estoy orgulloso de vivir en <país de prueba>'
+set_label(items.country$IS3G27E) <- '<país de prueba> es un mejor país para vivir que en la mayoría de los otros países'
+
+sjPlot::plot_likert(items.country %>% select(starts_with("IS3")),
+                    sort.frq = "pos.asc",reverse.scale = T)
+```
+
+* S_FISCED	Father’s highest educational attainment
+* S_MISCED	Mother’s highest educational attainment
+
+1. No completó secundaria o segundo ciclo básico
+2. Primer ciclo de secundaria o segundo ciclo básico
+3. Segundo ciclo de secundaria
+4. Post-secundaria no terciaria / Educación terciaria de ciclo corto
+5. Superior: 
+  - Grado, primer ciclo de licenciatura, bachelor o equivalente
+  - Maestría, máster, segundo ciclo de licenciatura o equivalente
+  - Doctorado o equivalente
+
+```{r eval=FALSE, include=FALSE}
+sjmisc::frq(df_iccs$S_FISCED)
+sjmisc::frq(df_iccs$S_MISCED)
+parent.educ <- 
+df_iccs %>% 
+  select(
+    # country,
+    IDSTUD,    
+    educ_pad=S_FISCED,
+    educ_mad=S_MISCED,
+  ) %>% 
+  # na.omit() %>% 
+  drop_labels(drop.na = T) %>% 
+  data.frame()
+
+parent.educ %>% select(educ_pad) %>% 
+  sjPlot::plot_frq()
+
+parent.educ %>% select(educ_mad) %>% 
+  sjPlot::plot_frq()
+```
+
+```{r}
+df_study <- 
+  df_iccs %>% 
+  select(
+    country,
+    country_name,
+    IDSTUD, 
+    IDSCHOOL,   
+    educ_pad=S_FISCED,
+    educ_mad=S_MISCED,
+    # igualdad de genero
+    IS3G24A,
+    IS3G24B,
+    IS3G24C,
+    IS3G24D,
+    IS3G24E,
+    IS3G24F,
+    # IS3G24G,  # no se usa...
+    # actitud hacia el pais
+    IS3G27A,
+    IS3G27B,
+    IS3G27C,
+    IS3G27D,
+    IS3G27E,
+    ) %>% 
+    drop_labels(drop.na = T)
+
+# Recode, etiquetado variables y valores................................................
+# 1) actitudes igualdad de genero.........................
+
+set_label(df_study)  <-   str_remove_all(string = sjlabelled::get_label(df_study),
+                 pattern = "Rights and Responsibilities/Roles women and men/")
+
+labs_1 <- c("Muy de acuerdo","De acuerdo","En desacuerdo","Muy en desacuerdo")
+for (i in names(df_study %>% select(starts_with("IS3")))) {
+  df_study[[i]] <- sjlabelled::set_labels(df_study[[i]],labels = labs_1)
+  # reverse de orden de etiquetas y valores
+  df_study[[i]] <- sjmisc::rec(df_study[[i]],rec = "rev") 
+}
+
+# for (i in names(df_study %>% select(IS3G24A,IS3G24B,IS3G24E))) {
+#   df_study[[i]] <- sjmisc::rec(df_study[[i]],rec = "rev")
+# }
+
+set_label(df_study$IS3G24A)<- 'a. Los hombres y las mujeres deben tener igualdad de oportunidades para participar en el gobierno.®'
+set_label(df_study$IS3G24B)<- 'b. Los hombres y las mujeres deben tener los mismos derechos en todos los sentidos.®'
+set_label(df_study$IS3G24C)<- 'c. Las mujeres deben permanecer fuera de la política.'
+set_label(df_study$IS3G24D)<- 'd. Cuando no hay muchos puestos de trabajo disponibles, los hombres deben tener más derecho a un trabajo que las mujeres.'
+set_label(df_study$IS3G24E)<- 'e. Los hombres y las mujeres deben obtener la igualdad de salario cuando están haciendo los mismos trabajos. ®'
+set_label(df_study$IS3G24F)<- 'f. Los hombres están mejor calificados para ser líderes políticos que las mujeres.'
+# set_label(df_study$IS3G24G)<- 'g. La primera prioridad de las mujeres debe estar criando a los niños.'
+
+# revisar orden de etiquetas en plot
+sjPlot::plot_likert(df_study %>% select(starts_with("IS3G24")),
+                    reverse.scale = F,
+                    values  =  "sum.outside") +
+  theme(legend.position="bottom") +
+  scale_fill_manual(
+    values = c("#f1eef6ff", "#bdc9e1ff","#74a9cfff","#0570b0ff"),
+    breaks=c(4,3,2,1),
+    labels = rev(labs_1))
+
+# 2) actitudes hacia el pais..............................
+set_label(df_study)  <-   str_remove_all(string = sjlabelled::get_label(df_study),
+                 pattern = "Institutions and Society/<Country of test>/")
+
+labs_2 <- c("Muy de acuerdo","De acuerdo","En desacuerdo","Muy en desacuerdo")
+for (i in names(df_study %>% select(starts_with("IS3")))) {
+  df_study[[i]] <- sjlabelled::set_labels(df_study[[i]],labels = labs_2)
+  # reverse de orden de etiquetas y valores
+  df_study[[i]] <- sjmisc::rec(df_study[[i]],rec = "rev")
+}
+
+set_label(df_study$IS3G27A) <- 'a. La (bandera del país de prueba) es importante para mí'
+set_label(df_study$IS3G27B) <- 'b. Tengo gran respeto por (país de prueba)'
+set_label(df_study$IS3G27C) <- 'c. En (país de prueba) deberíamos estar orgullosos de lo que hemos logrado'
+set_label(df_study$IS3G27D) <- 'd. Estoy orgulloso de vivir en (país de prueba)'
+set_label(df_study$IS3G27E) <- 'e. (país de prueba) es un mejor país para vivir que en la mayoría de los otros países'
+
+# revisar plot
+sjPlot::plot_likert(df_study %>% select(starts_with("IS3G27")),
+                    reverse.scale = F, 
+                    values  =  "sum.outside") +
+  theme(legend.position="bottom") +
+  scale_fill_manual(
+    values = c("#f1eef6ff", "#bdc9e1ff","#74a9cfff","#0570b0ff"),
+    breaks=c(4,3,2,1),
+    labels = rev(labs_2))
+
+# 3) educacion padre/madre..............................
+labs_3 <- c("No completó secundaria o segundo ciclo básico",
+            "Primer ciclo de secundaria o segundo ciclo básico",
+            "Segundo ciclo de secundaria",
+            "Post-secundaria no terciaria / Educación terciaria de ciclo corto",
+            "Universitaria o superior")
+
+for (i in names(df_study %>% select(starts_with("educ_")))) {
+  df_study[[i]] <- sjlabelled::set_labels(df_study[[i]],labels = labs_3)
+  # df_study[[i]] <- sjmisc::rec(df_study[[i]],rec = "rev")
+}
+
+set_label(df_study$educ_pad) <- 'Nivel de estudios más alto del padre'
+set_label(df_study$educ_mad) <- 'Nivel de estudios más alto de la madre'
+
+# view_df(df_study,
+#         show.frq = T, 
+#         show.prc = T)
+```
+
+# Guardar 
+
+```{r}
+# guardar datos
+save(df_study,file = here::here("input/data-proc/study_1.RData"))
+
+# guardar codebook
+view_df(df_study,
+        show.frq = T, 
+        show.prc = T, 
+        file = here::here("output/codebook_study1.html"))
+```
+
+

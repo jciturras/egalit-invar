@@ -37,3 +37,4 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+input/data-original/ICCS2016_IDB_SPSS.zip

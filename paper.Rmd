@@ -1,0 +1,87 @@
+---
+ title: "Análisis métrico de escala de igualitarismo e invarianza entre países"
+ # author:  Daniel Miranda, Juan Carlos Castillo & Julio Iturra
+ bibliography: "C:/Users/Julio/Dropbox/Bibtex/zlibrary.bib"
+ csl: "input/bib/apa6.csl"
+ css: "input/css/custom.css"
+ output:
+     bookdown::pdf_document2:
+         template: default
+         toc: false
+     bookdown::html_document2:
+         number_sections: true
+     bookdown::word_document2:
+         reference_docx: template.docx
+ geometry: margin=0.78in
+ header-includes:
+   - \usepackage[spanish,es-tabla,es-nodecimaldot]{babel} # para decimales con commas en vez de punto
+   - \usepackage{times}           # Times New Roman
+   - \usepackage{caption}
+   - \captionsetup[figure, table]{labelfont={bf},labelformat={default},labelsep=period}
+   - \usepackage{graphicx}
+   - \usepackage{float}
+   - \usepackage{booktabs}
+   - \usepackage{longtable}
+   - \usepackage{array}
+   - \usepackage{multirow}
+   - \usepackage{wrapfig}
+   - \usepackage{float}
+   - \usepackage{colortbl}
+   - \usepackage{pdflscape}
+   - \usepackage{tabu}
+   - \usepackage{threeparttable}
+ linestretch: '1.5'
+ link-citations: yes
+ linkcolor: blue
+ editor_options:
+   chunk_output_type: console
+---
+
+```{r render,include=FALSE, eval=FALSE}
+ rmarkdown::render("paper.Rmd")
+```
+
+```{r setup, include=FALSE}
+ knitr::opts_chunk$set(
+ 	echo = FALSE,
+ 	message = FALSE,
+ 	warning = FALSE,
+ 	cache = FALSE, 
+ 	fig.align = 'center', 
+ 	fig.height = 10, 
+ 	fig.width = 8
+ )
+ options(scipen=999)
+ rm(list=ls())
+ options(knitr.kable.NA = '')
+```
+
+# Introducción
+
+# Datos, variables y método
+
+## Datos
+
+* Tabla por países, escuelas y estudiantes
+
+## Variables
+
+* Tabla de variables
+
+## Métodos
+
+* CFA
+* Invarianza x países
+
+# Resultados
+
+## Descriptivos
+
+* likertplot
+
+## Análisis Factorial Confirmatorio
+
+* Modelo 1 dimensión x países
+* Modelo 2 dimensiones x países
+
+* Invarianza modelo 2 factores por países
