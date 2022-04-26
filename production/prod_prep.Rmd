@@ -85,7 +85,7 @@ df_iccs$country_name <- countrycode(sourcevar = df_iccs$country,
 
 sjmisc::frq(df_iccs$country_name)
 # sjPlot::tab_xtab(df_iccs$country_name,df_iccs$COUNTRY)
-# view_df(df_iccs)
+view_df(df_iccs)
 ```
 
 # Preparación 
@@ -219,7 +219,9 @@ df_study <-
     IDSCHOOL,   
     educ_pad=S_FISCED,
     educ_mad=S_MISCED,
+    educ_max=S_HISCED,
     # igualdad de genero
+    S_GENEQL,
     IS3G24A,
     IS3G24B,
     IS3G24C,
@@ -228,6 +230,7 @@ df_study <-
     IS3G24F,
     # IS3G24G,  # no se usa...
     # actitud hacia el pais
+    S_CNTATT,
     IS3G27A,
     IS3G27B,
     IS3G27C,
@@ -312,6 +315,7 @@ for (i in names(df_study %>% select(starts_with("educ_")))) {
 
 set_label(df_study$educ_pad) <- 'Nivel de estudios más alto del padre'
 set_label(df_study$educ_mad) <- 'Nivel de estudios más alto de la madre'
+set_label(df_study$educ_max) <- 'Nivel de estudios más alto alcanzado'
 
 # view_df(df_study,
 #         show.frq = T, 

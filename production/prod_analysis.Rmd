@@ -18,9 +18,12 @@ editor_options:
 
 ```{r setup}
 knitr::opts_chunk$set(
-	echo = TRUE,
+	echo = FALSE,
 	message = FALSE,
-	warning = FALSE
+	warning = FALSE, 
+	fig.height = 18, 
+	fig.width = 11, 
+	cache = TRUE
 )
 options(scipen=9999) # desactivar notacion cientifica
 remove(list = ls()) #limpieza del entorno de trabajo
@@ -42,7 +45,7 @@ div.tocify {
 
 # Análisis descriptivo 
 
-```{r tab-count}
+```{r tab-count, echo=FALSE}
 #Tabla por países, escuelas y estudiantes
 rm(list=ls())
 if (!require("pacman")) install.packages("pacman") # instalar pacman
@@ -356,8 +359,8 @@ df_gender <-
           country,
           country_name)
 
-for (i in names(df_countries %>% select(IS3G24A,IS3G24B,IS3G24E))) {
-  df_countries[[i]] <- sjmisc::rec(df_countries[[i]],rec = "rev")
+for (i in names(df_gender %>% select(IS3G24A,IS3G24B,IS3G24E))) {
+  df_gender[[i]] <- sjmisc::rec(df_gender[[i]],rec = "rev")
 }
 
 # CFA 1 dimension:.............................................................
@@ -386,6 +389,7 @@ nobs_n <- data.table::rbindlist(nobs_list) %>%
   # Customize object
   sum_fit$nobs <- nobs_n$obs
   sum_fit <- dplyr::select(sum_fit,country,"chisq","df", nobs,"cfi","tli","rmsea")
+  sum_fit <- sum_fit %>% dplyr::arrange(chisq)
   colnames <- c("País","$\\chi^2$","gl","$N$","CFI","TLI","RMSEA")
   # Create table
   tab_cfa_count_1d <-
@@ -461,7 +465,9 @@ nobs_n <- data.table::rbindlist(nobs_list) %>%
   # Customize object
   sum_fit$nobs <- nobs_n$obs
   sum_fit <- dplyr::select(sum_fit,country,"chisq","df", nobs,"cfi","tli","rmsea")
+  sum_fit <- sum_fit %>% dplyr::arrange(chisq)
   colnames <- c("País","$\\chi^2$","gl","$N$","CFI","TLI","RMSEA")
+  
   # Create table
   tab_cfa_count_2d <-
     kable(
@@ -480,13 +486,645 @@ nobs_n <- data.table::rbindlist(nobs_list) %>%
   tab_cfa_count_2d 
 ```
 
+```{r plots-fit, fig.dim= c(10,10)}
+rm(list=ls())
+if (!require("pacman")) install.packages("pacman") # instalar pacman
+                            # cargar librerias
+pacman::p_load(dplyr,       # Manipulacion de datos
+               car,         # recodificar variables
+               sjlabelled,  # etiquetado de variables
+               sjmisc,      # descriptivos y frecuencias
+               sjPlot,      # tablas, plots y descriptivos
+               knitr,
+               kableExtra, 
+               lavaan
+               )
+load(file = here::here("input/data-proc/study_1.RData"))
+
+df_countries <- df_study %>% na.omit()
+df_gender <- 
+ df_countries %>% 
+   select(starts_with("IS3G24"),
+          country,
+          country_name)
+
+for (i in names(df_countries %>% select(IS3G24A,IS3G24B,IS3G24E))) {
+  df_countries[[i]] <- sjmisc::rec(df_countries[[i]],rec = "rev")
+}
+
+# CFA 1 dimension:.............................................................
+
+cfa_gen1 <- '
+  eqgen=~ IS3G24A+IS3G24B+IS3G24C+IS3G24D+IS3G24E+IS3G24F
+'
+
+# estimar modelo por paises
+df_paises <- split(df_gender, df_gender$country_name)
+results1 = lapply(df_paises, function(df_gender) lavaan::cfa(cfa_gen1,data = df_gender))
+
+#extraer fitmeasures por paises
+results1_list<- lapply(results1, function(results1) data.frame(t(lavaan::fitmeasures(results1)[c("chisq","df","cfi","tli","rmsea")])))
+#extraer nobs por paises
+nobs_list <- lapply(results1, function(results1) data.frame(obs=t(lavaan::nobs(results1))))
+nobs_n <- data.table::rbindlist(nobs_list) %>% 
+  mutate(country=names(nobs_list)) %>%
+  select(country,everything())
+
+  # extract fit indices from models and add to table
+  sum_fit1 <- 
+  data.table::rbindlist(results1_list) %>% 
+  mutate(country=names(results1_list)) %>% 
+  select(country,everything())
+  # Customize object
+  sum_fit1$nobs <- nobs_n$obs
+  sum_fit1 <- dplyr::select(sum_fit1,country,"chisq","df", nobs,"cfi","tli","rmsea")
+  
+# CFA 2 dimension:.............................................................
+
+# Evidence from previous analyses (Miranda & Castillo, 2018) indicates that the gender equality scale would consider up of two dimensions: support for equal political rights between men and women and attitudes towards the ability to participate in public space
+
+cfa_gen2 <- '
+  eqpol=~ IS3G24A+IS3G24B+IS3G24E
+  eqpub=~ IS3G24C+IS3G24D+IS3G24F 
+  '
+
+# estimar modelo por paises
+df_paises <- split(df_gender, df_gender$country_name)
+results2 = lapply(df_paises, function(df_gender) lavaan::cfa(cfa_gen2,data = df_gender))
+
+#extraer fitmeasures por paises
+results2_list<- lapply(results2, function(results2) data.frame(t(lavaan::fitmeasures(results2)[c("chisq","df","cfi","tli","rmsea")])))
+#extraer nobs por paises
+nobs_list <- lapply(results2, function(results2) data.frame(obs=t(lavaan::nobs(results2))))
+nobs_n <- data.table::rbindlist(nobs_list) %>% 
+  mutate(country=names(nobs_list)) %>%
+  select(country,everything())
+
+  # extract fit indices from models and add to table
+  sum_fit2 <- 
+  data.table::rbindlist(results2_list) %>% 
+  mutate(country=names(results2_list)) %>% 
+  select(country,everything())
+  # Customize object
+  sum_fit2$nobs <- nobs_n$obs
+  sum_fit2 <- dplyr::select(sum_fit2,country,"chisq","df", nobs,"cfi","tli","rmsea")
+  
+  
+# fit_meas <- left_join(sum_fit1,sum_fit2, by = c("country"),suffix=c("_d1","_d2")) 
+sum_fit1$dim <- 1
+sum_fit2$dim <- 2
+fit_meas <- bind_rows(sum_fit1,sum_fit2)
+plot_chi<- plot_grpfrq(var.cnt = fit_meas$chisq,
+                       var.grp=fit_meas$dim,
+                       type = "boxplot",
+                       ylim = c(0,5500),
+                       title = "",
+                       axis.labels = c("Una","Dos"),
+                       axis.titles = c("χ²"),
+                       show.legend = F)
+plot_cfi<- plot_grpfrq(var.cnt = fit_meas$cfi,  
+                       var.grp=fit_meas$dim,
+                       type = "boxplot",
+                       ylim = c(0,1.3),
+                       title = "",                       
+                       axis.labels = c("Una","Dos"),
+                       axis.titles = c("CFI"),
+                       show.legend = F)
+plot_tli<- plot_grpfrq(var.cnt = fit_meas$tli,  
+                       var.grp=fit_meas$dim,
+                       type = "boxplot",
+                       ylim = c(0,1.3),
+                       title = "",                       
+                       axis.labels = c("Una","Dos"),
+                       axis.titles = c("TLI"),
+                       show.legend = F)
+plot_rms<- plot_grpfrq(var.cnt = fit_meas$rmsea,
+                       var.grp=fit_meas$dim,
+                       type = "boxplot",
+                       ylim = c(0,1.3),
+                       title = "",                       
+                       axis.labels = c("Una","Dos"),
+                       axis.titles = c("RMSEA"),
+                       show.legend = F)
+
+plots_fit<- 
+  gridExtra::grid.arrange(plot_cfi,plot_tli,plot_rms, ncol=3) 
+```
+
 ```{r inv-genero}
+# Analisis Factorial Confirmatorio: Genero
+rm(list=ls())
+options(knitr.kable.NA = '')
+if (!require("pacman")) install.packages("pacman") # instalar pacman
+                            # cargar librerias
+pacman::p_load(dplyr,       # Manipulacion de datos
+               car,         # recodificar variables
+               sjlabelled,  # etiquetado de variables
+               sjmisc,      # descriptivos y frecuencias
+               sjPlot,      # tablas, plots y descriptivos
+               knitr,
+               kableExtra, 
+               lavaan
+               )
+load(file = here::here("input/data-proc/study_1.RData"))
+
+df_countries <- df_study %>% na.omit()
+df_gender <- 
+ df_countries %>% 
+   select(starts_with("IS3G24"),
+          country,
+          country_name)
+
+for (i in names(df_countries %>% select(IS3G24A,IS3G24B,IS3G24E))) {
+  df_countries[[i]] <- sjmisc::rec(df_countries[[i]],rec = "rev")
+}
+
+# CFA 2 dimension:.............................................................
+
+# Evidence from previous analyses (Miranda & Castillo, 2018) indicates that the gender equality scale would consider up of two dimensions: support for equal political rights between men and women and attitudes towards the ability to participate in public space
+
+cfa_gen2 <- '
+  eqpol=~ IS3G24A+IS3G24B+IS3G24E
+  eqpub=~ IS3G24C+IS3G24D+IS3G24F 
+  '
+
+  inv01 <- semTools::measurementInvariance(model=cfa_gen2,
+                                           data=df_gender, 
+                                           group="country",estimator = "ML",strict=TRUE,quiet = T)
+
+  conf  <- inv01$fit.configural
+  weak  <- inv01$fit.loadings
+  strong<- inv01$fit.intercepts
+  strict<- inv01$fit.residuals
+
+  tab01<- lavaan::anova(conf,weak,strong,strict,SB.classic=TRUE) %>%
+    dplyr::as_tibble() %>%
+    dplyr::select("Chisq","Df","chisq_diff"=`Chisq diff`,"df_diff"=`Df diff`,"pvalue"=`Pr(>Chisq)`) %>%
+    dplyr::mutate(stars=gtools::stars.pval(pvalue),
+           chisqt=paste0(round(Chisq,2)," (",Df,") "),
+           decision=ifelse(pvalue>0.05,yes = "Accept",no = "Reject"),
+           model=c("Configural","Débil","Fuerte","Estricta"))
+
+  fit.meas<- dplyr::bind_rows(lavaan::fitmeasures(inv01$fit.configural,output ="matrix")[c("chisq","df","cfi","rmsea","rmsea.ci.lower","rmsea.ci.upper"),],
+                              lavaan::fitmeasures(inv01$fit.loadings,  output ="matrix")[c("chisq","df","cfi","rmsea","rmsea.ci.lower","rmsea.ci.upper"),],
+                              lavaan::fitmeasures(inv01$fit.intercepts,output ="matrix")[c("chisq","df","cfi","rmsea","rmsea.ci.lower","rmsea.ci.upper"),],
+                              lavaan::fitmeasures(inv01$fit.residuals, output ="matrix")[c("chisq","df","cfi","rmsea","rmsea.ci.lower","rmsea.ci.upper"),])
+
+  # compute differences in chisq, df, cfi and rmsea (90%, lower.ci - upper.ci )
+  fit.meas<- fit.meas %>%
+    dplyr::mutate(diff.chi2 = chisq    - lag(chisq,default = dplyr::first(chisq)),
+           diff.df   = df       - lag(df,   default = dplyr::first(df)),
+           diff.cfi  = cfi      - lag(cfi,  default = dplyr::first(cfi)),
+           diff.rmsea   = rmsea - lag(rmsea,default = dplyr::first(rmsea))) %>%
+    round(3) %>%
+    dplyr::mutate(rmsea.ci=paste0(rmsea," \n ", "(",rmsea.ci.lower,"-",rmsea.ci.upper,")"))
+
+  tab.inv<- dplyr::bind_cols(tab01,fit.meas) %>%
+    dplyr::select(model,chisqt,cfi,rmsea.ci,diff.chi2,diff.df,diff.cfi,diff.rmsea,stars,decision) %>%
+    dplyr::mutate(diff.chi2=paste0(diff.chi2," (",diff.df,") ",stars)) %>%
+    dplyr::select(model,chisqt,cfi,rmsea.ci,diff.chi2,diff.cfi,diff.rmsea,decision)
+
+col.nam <- c("Model","$\\chi^2 (\\text{df})$","CFI","RMSEA (90 CI)",
+               "$\\Delta \\chi^2 (\\Delta \\text{df}$)","$\\Delta \\text{CFI}$","$\\Delta \\text{RMSEA}$","Decision")
+  footnote <- paste0("***p < 0.001")
+
+  knitr::kable(tab.inv, col.names = col.nam, align = "l",
+        booktabs=TRUE,
+        # format = table_format,
+        escape = FALSE,
+        caption = "Invarianza multigrupo para modelo de medición de Igualdad de género (dos dimensiones)") %>%
+    kableExtra::kable_styling(full_width = FALSE,
+                              latex_options = "HOLD_position",
+                              bootstrap_options=c("striped", "bordered"),
+                              font_size = 10) %>%
+    kableExtra::footnote(general = footnote, footnote_as_chunk = T)
 
 ```
 
+* sort de tablas de fit meas por país y ordenar según x2
+* revisar posibilidad de fuentes de invarianza x país
+* son todos los países iguales en fit?
+
+## Modelos
+
+```{r tab-cor, cache=TRUE}
+# genero~educacion
+options("mc.cores"=4) 
+rm(list=ls())
+if (!require("pacman")) install.packages("pacman") # instalar pacman
+                            # cargar librerias
+pacman::p_load(dplyr,       # Manipulacion de datos
+               car,         # recodificar variables
+               sjlabelled,  # etiquetado de variables
+               sjmisc,      # descriptivos y frecuencias
+               sjPlot,      # tablas, plots y descriptivos
+               knitr,
+               kableExtra, 
+               lavaan, ggplot2
+               )
+load(file = here::here("input/data-proc/study_1.RData"))
+
+df_countries <- df_study %>% na.omit()
+df_gender <- 
+ df_countries %>% 
+   select(starts_with("IS3G24"),
+          country,
+          country_name,
+          educ_max,
+          S_GENEQL)
+
+  for (i in names(df_gender %>% select(IS3G24A,IS3G24B,IS3G24E))) {
+    df_gender[[i]] <- sjmisc::rec(df_gender[[i]],rec = "rev")
+  }
+
+# CFA 2 dimension:.............................................................
+
+# Evidence from previous analyses (Miranda & Castillo, 2018) indicates that the gender equality scale would consider up of two dimensions: support for equal political rights between men and women and attitudes towards the ability to participate in public space
+
+cfa_gen2 <- '
+  eqpol=~ IS3G24A+IS3G24B+IS3G24E
+  eqpub=~ IS3G24C+IS3G24D+IS3G24F 
+  '
+fit_gen2 <- cfa(cfa_gen2,
+                data = df_gender)
+
+# semPlot::semPaths(fit_gen2, what = "std")
+
+# a <- psych::cor.ci(df_paises$Alemania,poly=TRUE, plot=F)
+# 
+# psych::cor.ci(df_paises$Alemania,poly=TRUE, plot=F)$rho[4,1:3]
+# 
+# a$ci[c("S_GEN-edc_m","eqpol-edc_m","eqpub-edc_m"),]$p
+
+scores_gen2<- 
+lavaan::lavPredict(fit_gen2) %>% 
+  data.frame()
+df_gender <- bind_cols(df_gender,scores_gen2)
+
+# estimar correlaciones por paises
+df_paises <- split(df_gender %>% select(S_GENEQL,eqpol,eqpub,educ_max), df_gender$country_name)
+
+# df_cor = lapply(df_paises, function(df_paises) data.frame(t(cor(df_paises)[4,1:3])))
+# df_cor_poly = lapply(df_paises, function(df_paises) data.frame(t(psych::mixedCor(data = df_paises)$rho[4,1:3])))
+# df_pval = lapply(df_paises, function(df_paises) data.frame(t(psych::corr.p(r = cor(x = df_paises),n = dim(df_paises)[1])[["p"]][4,])))
+
+df_cor_mix = 
+  lapply(df_paises, 
+         function(df_paises) data.frame(t(psych::cor.ci(df_paises,poly=TRUE, plot=F)$rho[4,1:3])))
+df_cor_mix_p = 
+  lapply(df_paises, 
+         function(df_paises) data.frame(t(psych::cor.ci(df_paises,poly=TRUE, plot=F,)$ci[c("S_GEN-edc_m","eqpol-edc_m","eqpub-edc_m"),]$p)))
+
+df_corr <- 
+data.table::rbindlist(df_cor_mix) %>% 
+  mutate(country=names(df_cor_mix)) %>%
+  select(country,everything())
+
+df_pvalues <- 
+data.table::rbindlist(df_cor_mix_p) %>% 
+  mutate(country=names(df_cor_mix_p)) %>%
+  select(country,everything()) %>% 
+  rename(S_GENEQL=X1,
+         eqpol=X2,
+         eqpub=X3)
+
+cor_tab <- 
+  left_join(df_corr,df_pvalues, by="country",suffix = c("_r","_p"))
+cor_tab$S_GENEQL <- paste0(round(cor_tab$S_GENEQL_r,3),gtools::stars.pval(cor_tab$S_GENEQL_p))
+cor_tab$eqpol <- paste0(round(cor_tab$eqpol_r,3),gtools::stars.pval(cor_tab$eqpol_p))
+cor_tab$eqpub <- paste0(round(cor_tab$eqpub_r,3),gtools::stars.pval(cor_tab$eqpub_p))
+cor_tab <- cor_tab %>% select(country,S_GENEQL,eqpub,eqpol)
+
+cor_tab %>% 
+  kable(col.names = c("","Escala original",
+                      "Participar en el espacio público", 
+                      "Igualdad de derechos políticos"),
+        caption = "Correlaciones polyseriales entre máximo nivel educacional alcanzado por los padres y los diferentes modelos de factores de
+igualdad de género") %>% 
+  kable_styling(full_width = F) %>% 
+  footnote(general = paste0("Elaboración propia en base a datos de ICSS 2016. ","(N = ", 
+                            format(dim(df_countries)[1], big.mark = "."),"). ", "$*p$ < 0.05 ;$**p$ < 0.01; $***p$ < 0.001"),
+           general_title = "Nota: ",
+           footnote_as_chunk = T,
+           threeparttable = T) %>% 
+    add_header_above(c(" " = 1, "Máximo nivel educacional alcanzado (padres)" = 3),align = "left") %>% 
+    column_spec(2:4, width = "4cm")
+```
+
+```{r tab-mean}
+# genero~educacion
+rm(list=ls())
+if (!require("pacman")) install.packages("pacman") # instalar pacman
+                            # cargar librerias
+pacman::p_load(dplyr,       # Manipulacion de datos
+               car,         # recodificar variables
+               sjlabelled,  # etiquetado de variables
+               sjmisc,      # descriptivos y frecuencias
+               sjPlot,      # tablas, plots y descriptivos
+               knitr,
+               kableExtra, 
+               lavaan, ggplot2,tidymodels
+               )
+load(file = here::here("input/data-proc/study_1.RData"))
+
+df_countries <- df_study %>% na.omit()
+df_gender <- 
+ df_countries %>% 
+   select(starts_with("IS3G24"),
+          country,
+          country_name,
+          educ_max,
+          S_GENEQL)
+
+  for (i in names(df_gender %>% select(IS3G24A,IS3G24B,IS3G24E))) {
+    df_gender[[i]] <- sjmisc::rec(df_gender[[i]],rec = "rev")
+  }
+
+# CFA 2 dimension:.............................................................
+
+# Evidence from previous analyses (Miranda & Castillo, 2018) indicates that the gender equality scale would consider up of two dimensions: support for equal political rights between men and women and attitudes towards the ability to participate in public space
+
+cfa_gen2 <- '
+  eqpol=~ IS3G24A+IS3G24B+IS3G24E
+  eqpub=~ IS3G24C+IS3G24D+IS3G24F 
+  '
+fit_gen2 <- cfa(cfa_gen2,
+                data = df_gender)
+
+
+scores_gen2<- 
+lavaan::lavPredict(fit_gen2) %>% 
+  data.frame()
+df_gender <- bind_cols(df_gender,scores_gen2)
+# reescalar factor scores en 0 a 100
+df_gender$eqpol_i<- scales::rescale(x =df_gender$eqpol,to = c(0, 100))
+df_gender$eqpub_i<- scales::rescale(x =df_gender$eqpub,to = c(0, 100))
+
+# estimar regresiones por paises
+df_paises <- split(df_gender %>% select(S_GENEQL,eqpol,eqpub,educ_max), df_gender$country_name)
+df_gender$educ_b <- ifelse(test = (df_gender$educ_max==4),yes = 1,no = 0)
+table(df_gender$educ_b)
+sjmisc::frq(df_gender$educ_b)
+
+
+# Modelos.......................
+# use: https://dplyr.tidyverse.org/reference/group_map.html
+df_lm_gen <- 
+df_gender %>%
+  group_by(country_name) %>%
+  group_map(~ broom::tidy(lm(S_GENEQL ~ educ_b, data = .x)),.keep = T)
+
+df_lm_eqpol <- 
+df_gender %>%
+  group_by(country_name) %>%
+  group_map(~ broom::tidy(lm(eqpol_i ~ educ_b, data = .x)),.keep = T)
+
+df_lm_eqpub <- 
+df_gender %>%
+  group_by(country_name) %>%
+  group_map(~ broom::tidy(lm(eqpub_i ~ educ_b, data = .x)),.keep = T)
+
+results_gen <- 
+  data.table::rbindlist(df_lm_gen) %>% 
+  select(term,estimate,p.value) %>% 
+  filter(term=="educ_b") %>% 
+  mutate(country=names(df_paises)) %>% 
+  select(country,est_a=estimate,p_a=p.value)
+
+results_eqpol <- 
+  data.table::rbindlist(df_lm_eqpol) %>% 
+  select(term,estimate,p.value) %>% 
+  filter(term=="educ_b") %>% 
+  mutate(country=names(df_paises)) %>% 
+  select(country,est_b=estimate,p_b=p.value)
+results_eqpub <- 
+  data.table::rbindlist(df_lm_eqpub) %>% 
+  select(term,estimate,p.value) %>% 
+  filter(term=="educ_b") %>% 
+  mutate(country=names(df_paises)) %>% 
+  select(country,est_c=estimate,p_c=p.value)
+
+
+lm_tab <- 
+  left_join(results_gen,results_eqpol, by="country") %>% 
+  left_join(results_eqpub, by="country")
+
+lm_tab$S_GENEQL <- paste0(round(lm_tab$est_a,3),gtools::stars.pval(lm_tab$p_a))
+lm_tab$eqpol    <- paste0(round(lm_tab$est_b,3),gtools::stars.pval(lm_tab$p_b))
+lm_tab$eqpub    <- paste0(round(lm_tab$est_c,3),gtools::stars.pval(lm_tab$p_c))
+lm_tab <- lm_tab %>% select(country,S_GENEQL,eqpub,eqpol)
+
+lm_tab %>% 
+  kable(col.names = c("","Escala original",
+                      "Participar en el espacio público", 
+                      "Igualdad de derechos políticos"),
+        caption = "Diferencias promedio entre estudiantes con y sin padres universitarios y los diferentes modelos de factores de
+igualdad de género") %>% 
+  kable_styling(full_width = F) %>% 
+  footnote(general = paste0("Elaboración propia en base a datos de ICSS 2016. ","(N = ", 
+                            format(dim(df_countries)[1], big.mark = "."),"). ", "$‘.’p$ < 0.10; $*p$ < 0.05 ;$**p$ < 0.01; $***p$ < 0.001"),
+           general_title = "Nota: ",
+           footnote_as_chunk = T,
+           threeparttable = T) %>% 
+    add_header_above(c(" " = 1, "Padres tienen/no tienen educación universitaria" = 3),align = "left") %>% 
+    column_spec(2:4, width = "4cm")
+
+
+
+```
+
+```{r plot-mean}
+# genero~educacion
+rm(list=ls())
+if (!require("pacman")) install.packages("pacman") # instalar pacman
+                            # cargar librerias
+pacman::p_load(dplyr,       # Manipulacion de datos
+               car,         # recodificar variables
+               sjlabelled,  # etiquetado de variables
+               sjmisc,      # descriptivos y frecuencias
+               sjPlot,      # tablas, plots y descriptivos
+               knitr,
+               kableExtra, 
+               lavaan, ggplot2,tidymodels
+               )
+load(file = here::here("input/data-proc/study_1.RData"))
+
+df_countries <- df_study %>% na.omit()
+df_gender <- 
+ df_countries %>% 
+   select(starts_with("IS3G24"),
+          country,
+          country_name,
+          educ_max,
+          S_GENEQL)
+
+  for (i in names(df_gender %>% select(IS3G24A,IS3G24B,IS3G24E))) {
+    df_gender[[i]] <- sjmisc::rec(df_gender[[i]],rec = "rev")
+  }
+
+# CFA 2 dimension:.............................................................
+
+# Evidence from previous analyses (Miranda & Castillo, 2018) indicates that the gender equality scale would consider up of two dimensions: support for equal political rights between men and women and attitudes towards the ability to participate in public space
+
+cfa_gen2 <- '
+  eqpol=~ IS3G24A+IS3G24B+IS3G24E
+  eqpub=~ IS3G24C+IS3G24D+IS3G24F 
+  '
+fit_gen2 <- cfa(cfa_gen2,
+                data = df_gender)
+
+
+scores_gen2<- 
+lavaan::lavPredict(fit_gen2) %>% 
+  data.frame()
+df_gender <- bind_cols(df_gender,scores_gen2)
+# reescalar factor scores en 0 a 100
+df_gender$eqpol_i<- scales::rescale(x =df_gender$eqpol,to = c(0, 100))
+df_gender$eqpub_i<- scales::rescale(x =df_gender$eqpub,to = c(0, 100))
+
+# estimar regresiones por paises
+df_paises <- split(df_gender %>% select(S_GENEQL,eqpol,eqpub,educ_max), df_gender$country_name)
+df_gender$educ_b <- ifelse(test = (df_gender$educ_max==4),yes = 1,no = 0)
+table(df_gender$educ_b)
+sjmisc::frq(df_gender$educ_b)
+
+
+theme_set(theme_bw())
+mean_orig <- 
+ggplot(df_gender,aes(y=S_GENEQL, x=educ_b))+
+  stat_summary(fun.y="mean", geom="point",position="dodge")+
+  stat_summary(fun.data = mean_se, geom = "errorbar", position="dodge",width=.8)+
+  scale_x_continuous(breaks=c(0,1) ,labels = c("No \n univ.", "Univ.")) +
+  facet_wrap(~country_name,nrow = 3,labeller =  label_wrap_gen(width = 20)) +
+  xlab("Máximo nivel educacional alcanzado (padres)")+
+  ylab(NULL) +
+  ggtitle("Escala original")
+
+mean_eqpol <- 
+ggplot(df_gender,aes(y=eqpol_i, x=educ_b))+
+  stat_summary(fun.y="mean", geom="point",position="dodge")+
+  stat_summary(fun.data = mean_se, geom = "errorbar", position="dodge",width=.8)+
+  # scale_y_continuous(limits = c(98,99))+
+  scale_x_continuous(breaks=c(0,1) ,labels = c("No \n univ.", "Univ.")) +
+  facet_wrap(~country_name,nrow = 3,labeller =  label_wrap_gen(width = 20)) +
+  xlab("Máximo nivel educacional alcanzado (padres)")+
+  ylab(NULL) + 
+  ggtitle(label = "Participar en el espacio público")
+
+mean_eqpub <- 
+ggplot(df_gender,aes(y=eqpub_i, x=educ_b))+
+  stat_summary(fun.y="mean", geom="point",position="dodge")+
+  stat_summary(fun.data = mean_se, geom = "errorbar", position="dodge",width=.8)+
+  # scale_y_continuous(limits = c(99,100))+
+  scale_x_continuous(breaks=c(0,1) ,labels = c("No \n univ.", "Univ.")) +
+  facet_wrap(~country_name,nrow = 3,labeller =  label_wrap_gen(width = 20)) +
+  xlab("Máximo nivel educacional alcanzado (padres)") + 
+  ylab(NULL) +
+  ggtitle("Igualdad de derechos políticos")  
+
+
+mean_gender<- 
+  gridExtra::grid.arrange(mean_orig,mean_eqpub, mean_eqpol, ncol=1) 
+ggsave(plot = mean_gender,filename = "mean_gender.png",
+       device = "png",units = "cm",width = 30,height = 45,
+       path = "output/images")
+```
+
+```{r plots-gen-educ}
+# genero~educacion
+rm(list=ls())
+if (!require("pacman")) install.packages("pacman") # instalar pacman
+                            # cargar librerias
+pacman::p_load(dplyr,       # Manipulacion de datos
+               car,         # recodificar variables
+               sjlabelled,  # etiquetado de variables
+               sjmisc,      # descriptivos y frecuencias
+               sjPlot,      # tablas, plots y descriptivos
+               knitr,
+               kableExtra, 
+               lavaan,
+               ggplot2
+               )
+load(file = here::here("input/data-proc/study_1.RData"))
+
+df_countries <- df_study %>% na.omit()
+df_gender <- 
+ df_countries %>% 
+   select(starts_with("IS3G24"),
+          country,
+          country_name,
+          educ_max,
+          S_GENEQL)
+
+  for (i in names(df_gender %>% select(IS3G24A,IS3G24B,IS3G24E))) {
+    df_gender[[i]] <- sjmisc::rec(df_gender[[i]],rec = "rev")
+  }
+
+# df_gender$educ_max <- as_character(sjlabelled::to_factor(df_gender$educ_max))
+# CFA 2 dimension:.............................................................
+
+# Evidence from previous analyses (Miranda & Castillo, 2018) indicates that the gender equality scale would consider up of two dimensions: support for equal political rights between men and women and attitudes towards the ability to participate in public space
+
+cfa_gen2 <- '
+  eqpol=~ IS3G24A+IS3G24B+IS3G24E
+  eqpub=~ IS3G24C+IS3G24D+IS3G24F 
+  '
+fit_gen2 <- cfa(cfa_gen2,
+                data = df_gender)
+scores_gen2<- 
+lavaan::lavPredict(fit_gen2) %>% 
+  data.frame()
+df_gender <- bind_cols(df_gender,scores_gen2)
+# reescalar factor scores en 0 a 100
+df_gender$eqpol_i<- scales::rescale(x =df_gender$eqpol,to = c(0, 100))
+df_gender$eqpub_i<- scales::rescale(x =df_gender$eqpub,to = c(0, 100))
+theme_set(theme_bw())
+plot_orig <- 
+ggplot(df_gender, aes(x = educ_max, y = S_GENEQL) ) +
+  geom_smooth(method = "lm", se = TRUE,color="black") +
+  # scale_y_continuous(limits = c(60,80)) +
+  facet_wrap(~country_name,nrow = 3,labeller =  label_wrap_gen(width = 20)) +
+  xlab("Máximo nivel educacional alcanzado (padres)")+
+  ylab(NULL) +
+  ggtitle("Escala original")
+
+plot_eqpub <- 
+ggplot(df_gender, aes(x = educ_max, y = eqpub_i)) +
+  geom_smooth(method = "lm", se = TRUE,color="black") +
+  # scale_y_continuous(limits = c(60,80))+
+  facet_wrap(~country_name,nrow = 3,labeller =  label_wrap_gen(width = 20)) +
+  xlab("Máximo nivel educacional alcanzado (padres)")+
+  ylab(NULL) + 
+  ggtitle(label = "Participar en el espacio público")
+
+plot_eqpol <- 
+ggplot(df_gender, aes(x = educ_max, y = eqpol_i) ) +
+  geom_smooth(method = "lm", se = TRUE,color="black") +
+  # scale_y_continuous(limits = c(60,80)) +
+  facet_wrap(~country_name,nrow = 3, labeller =  label_wrap_gen(width = 20)) + 
+  xlab("Máximo nivel educacional alcanzado (padres)") + 
+  ylab(NULL) +
+  ggtitle("Igualdad de derechos políticos")
+
+
+plots_gender<- 
+  gridExtra::grid.arrange(plot_orig,plot_eqpub, plot_eqpol, ncol=1) 
+ggsave(plot = plots_gender,filename = "plots_gender.png",
+       device = "png",units = "cm",width = 30,height = 45,
+       path = "output/images")
+```
+
+- variable bruta iccs 
+- variable latente original
+- variable latente refinada
+- correlación de 24 países actitude~educación, indicador compuesto S_HiSCED (polyserial corr)
+
+- ttest 0 = menos de terciaria; 1 = terciaria o más
+
+
 ## Actitudes país de residencia {-}
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 rm(list=ls())
 if (!require("pacman")) install.packages("pacman") # instalar pacman
                             # cargar librerias
@@ -514,7 +1152,7 @@ cfa_count1 <- '
 '
 fit_count1 <- cfa(cfa_count1,data = df_country)
 
-# lavaan::fitmeasures(fit_count1)[c("chisq","df","cfi","tli","rmsea")]
+lavaan::fitmeasures(fit_count1)[c("chisq","df","cfi","tli","rmsea")]
 
 # CFA 4 items (sin E) :.............................................................
 
@@ -524,7 +1162,7 @@ cfa_count2 <- '
 fit_count2 <- cfa(cfa_count2,
                   data = df_country)
 
-# lavaan::fitmeasures(fit_count2)[c("chisq","df","cfi","tli","rmsea")]
+lavaan::fitmeasures(fit_count2)[c("chisq","df","cfi","tli","rmsea")]
 
 
 # CFA 4 items (sin A) :.............................................................
@@ -535,7 +1173,7 @@ cfa_count3 <- '
 fit_count3 <- cfa(cfa_count3,
                   data = df_country)
 
-# lavaan::fitmeasures(fit_count3)[c("chisq","df","cfi","tli","rmsea")]
+lavaan::fitmeasures(fit_count3)[c("chisq","df","cfi","tli","rmsea")]
 
   # extract fit indices from models and add to table
   sum_fit<- dplyr::bind_rows(lavaan::fitmeasures(fit_count1)[c("chisq","df","cfi","tli","rmsea")],
@@ -543,8 +1181,8 @@ fit_count3 <- cfa(cfa_count3,
 
   # Customize object
   sum_fit$mod <- c("Escala completa",
-                   "Escala sin (E)")
-  sum_fit$nobs <- c(nobs(fit_gen1),nobs(fit_gen2))
+                   "Escala restringida (sin E)")
+  sum_fit$nobs <- c(nobs(fit_count1),nobs(fit_count2))
   sum_fit$est <- c("ML","ML")
   sum_fit <- dplyr::select(sum_fit,mod,nobs,est,everything())
   colnames <- c("Dimensiones","$N$","Estimador","$\\chi^2$","gl","CFI","TLI","RMSEA")
@@ -557,7 +1195,7 @@ fit_count3 <- cfa(cfa_count3,
       digits = 3,
       booktabs = T,
       col.names = colnames,
-      caption = "Resumen de ajuste según número de dimensiones para modelo de medición de Igualdad de género ",
+      caption = "Resumen de ajuste según número de dimensiones para modelo de medición para Actitudes hacia el país de residencia",
       escape = FALSE
     ) %>% 
     kable_styling(full_width = F,
@@ -567,17 +1205,85 @@ fit_count3 <- cfa(cfa_count3,
   table_cfa_fits 
 ```
 
-```{r inv-pais}
+```{r inv-pais, eval=FALSE, include=FALSE}
+rm(list=ls())
+if (!require("pacman")) install.packages("pacman") # instalar pacman
+                            # cargar librerias
+pacman::p_load(dplyr,       # Manipulacion de datos
+               car,         # recodificar variables
+               sjlabelled,  # etiquetado de variables
+               sjmisc,      # descriptivos y frecuencias
+               sjPlot,      # tablas, plots y descriptivos
+               knitr,
+               kableExtra,
+               lavaan
+               )
+load(file = here::here("input/data-proc/study_1.RData"))
+df_countries <- df_study %>% na.omit()
+
+df_country <- 
+df_countries %>% 
+  select(starts_with("IS3G27"))
+
+cfa_count2 <- '
+  country=~ IS3G27A+IS3G27B+IS3G27C+IS3G27D
+'
+  inv01 <- semTools::measurementInvariance(model=cfa_count2,
+                                           data=df_country,
+                                           group="country",
+                                           estimator = "ML",
+                                           strict=TRUE,
+                                           quiet = T)
+
+  conf  <- inv01$fit.configural
+  weak  <- inv01$fit.loadings
+  strong<- inv01$fit.intercepts
+  strict<- inv01$fit.residuals
+
+  tab01<- lavaan::anova(conf,weak,strong,strict,SB.classic=TRUE) %>%
+    dplyr::as_tibble() %>%
+    dplyr::select("Chisq","Df","chisq_diff"=`Chisq diff`,"df_diff"=`Df diff`,"pvalue"=`Pr(>Chisq)`) %>%
+    dplyr::mutate(stars=gtools::stars.pval(pvalue),
+           chisqt=paste0(round(Chisq,2)," (",Df,") "),
+           decision=ifelse(pvalue>0.05,yes = "Accept",no = "Reject"),
+           model=c("Configural","Débil","Fuerte","Estricta"))
+
+  fit.meas<- dplyr::bind_rows(lavaan::fitmeasures(inv01$fit.configural,output ="matrix")[c("chisq","df","cfi","rmsea","rmsea.ci.lower","rmsea.ci.upper"),],
+                              lavaan::fitmeasures(inv01$fit.loadings,  output ="matrix")[c("chisq","df","cfi","rmsea","rmsea.ci.lower","rmsea.ci.upper"),],
+                              lavaan::fitmeasures(inv01$fit.intercepts,output ="matrix")[c("chisq","df","cfi","rmsea","rmsea.ci.lower","rmsea.ci.upper"),],
+                              lavaan::fitmeasures(inv01$fit.residuals, output ="matrix")[c("chisq","df","cfi","rmsea","rmsea.ci.lower","rmsea.ci.upper"),])
+
+  # compute differences in chisq, df, cfi and rmsea (90%, lower.ci - upper.ci )
+  fit.meas<- fit.meas %>%
+    dplyr::mutate(diff.chi2 = chisq    - lag(chisq,default = dplyr::first(chisq)),
+           diff.df   = df       - lag(df,   default = dplyr::first(df)),
+           diff.cfi  = cfi      - lag(cfi,  default = dplyr::first(cfi)),
+           diff.rmsea   = rmsea - lag(rmsea,default = dplyr::first(rmsea))) %>%
+    round(3) %>%
+    dplyr::mutate(rmsea.ci=paste0(rmsea," \n ", "(",rmsea.ci.lower,"-",rmsea.ci.upper,")"))
+
+  tab.inv<- dplyr::bind_cols(tab01,fit.meas) %>%
+    dplyr::select(model,chisqt,cfi,rmsea.ci,diff.chi2,diff.df,diff.cfi,diff.rmsea,stars,decision) %>%
+    dplyr::mutate(diff.chi2=paste0(diff.chi2," (",diff.df,") ",stars)) %>%
+    dplyr::select(model,chisqt,cfi,rmsea.ci,diff.chi2,diff.cfi,diff.rmsea,decision)
+
+col.nam <- c("Model","$\\chi^2 (\\text{df})$","CFI","RMSEA (90 CI)",
+               "$\\Delta \\chi^2 (\\Delta \\text{df}$)","$\\Delta \\text{CFI}$","$\\Delta \\text{RMSEA}$","Decision")
+  footnote <- paste0("***p < 0.001")
+
+  knitr::kable(tab.inv, col.names = col.nam, align = "l",
+        booktabs=TRUE,
+        # format = table_format,
+        escape = FALSE,
+        caption = "Invarianza multigrupo para modelo de medición de Actitudes hacia el país de residencia") %>%
+    kableExtra::kable_styling(full_width = FALSE,
+                              latex_options = "HOLD_position",
+                              bootstrap_options=c("striped", "bordered"),
+                              font_size = 10) %>%
+    kableExtra::footnote(general = footnote, footnote_as_chunk = T)
 
 ```
 
-## Modelos
-
-- variable bruta iccs 
-- variable latente original
-- variable latente refinada
-- correlación de 24 países actitude~educación, indicador compuesto S_HiSCED (polychoric corr)
-- 
 
 
 
