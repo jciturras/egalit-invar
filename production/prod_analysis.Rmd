@@ -117,7 +117,7 @@ df_gender <- select(df_gender,items,".")
            threeparttable = T)
 ```
 
-```{r cor-gender, fig.cap="Matriz de correlaciones policóricas para Apoyo de los estudiantes a la igualdad de género"}
+```{r cor-gender, fig.cap="Matriz de correlaciones policóricas para Apoyo de los estudiantes a la igualdad de género",fig.dim=c(8, 6)}
 #Correlacion indicadores genero
 rm(list=ls())
 if (!require("pacman")) install.packages("pacman") # instalar pacman
@@ -208,7 +208,7 @@ df_country <- select(df_country,items,".")
 
 ```
 
-```{r cor-nacion, fig.cap="Matriz de correlaciones policóricas para actitudes positivas de los estudiantes hacia su país de residencia"}
+```{r cor-nacion, fig.cap="Matriz de correlaciones policóricas para actitudes positivas de los estudiantes hacia su país de residencia",fig.dim=c(8, 6)}
 rm(list=ls())
 if (!require("pacman")) install.packages("pacman") # instalar pacman
                             # cargar librerias
@@ -486,7 +486,7 @@ nobs_n <- data.table::rbindlist(nobs_list) %>%
   tab_cfa_count_2d 
 ```
 
-```{r plots-fit, fig.dim= c(10,10)}
+```{r plots-fit, fig.dim= c(8, 6)}
 rm(list=ls())
 if (!require("pacman")) install.packages("pacman") # instalar pacman
                             # cargar librerias
@@ -662,7 +662,7 @@ cfa_gen2 <- '
     dplyr::select("Chisq","Df","chisq_diff"=`Chisq diff`,"df_diff"=`Df diff`,"pvalue"=`Pr(>Chisq)`) %>%
     dplyr::mutate(stars=gtools::stars.pval(pvalue),
            chisqt=paste0(round(Chisq,2)," (",Df,") "),
-           decision=ifelse(pvalue>0.05,yes = "Accept",no = "Reject"),
+           decision=ifelse(pvalue>0.05,yes = "Acepta",no = "Rechaza"),
            model=c("Configural","Débil","Fuerte","Estricta"))
 
   fit.meas<- dplyr::bind_rows(lavaan::fitmeasures(inv01$fit.configural,output ="matrix")[c("chisq","df","cfi","rmsea","rmsea.ci.lower","rmsea.ci.upper"),],
@@ -770,10 +770,10 @@ df_paises <- split(df_gender %>% select(S_GENEQL,eqpol,eqpub,educ_max), df_gende
 
 df_cor_mix = 
   lapply(df_paises, 
-         function(df_paises) data.frame(t(psych::cor.ci(df_paises,poly=TRUE, plot=F)$rho[4,1:3])))
+         function(df_paises) data.frame(t(psych::cor.ci(df_paises,poly=TRUE, plot=F,)$rho[4,1:3])))
 df_cor_mix_p = 
   lapply(df_paises, 
-         function(df_paises) data.frame(t(psych::cor.ci(df_paises,poly=TRUE, plot=F,)$ci[c("S_GEN-edc_m","eqpol-edc_m","eqpub-edc_m"),]$p)))
+         function(df_paises) data.frame(t(psych::cor.ci(df_paises,poly=TRUE, plot=F)$ci[c("S_GEN-edc_m","eqpol-edc_m","eqpub-edc_m"),]$p)))
 
 df_corr <- 
 data.table::rbindlist(df_cor_mix) %>% 
