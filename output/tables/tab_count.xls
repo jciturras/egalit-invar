@@ -1,0 +1,134 @@
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;border-bottom: 0;">
+<caption>Muestra de países participantes en ICCS</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> País </th>
+   <th style="text-align:right;"> Total de escuelas </th>
+   <th style="text-align:right;"> Total de estudiantes </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Alemania </td>
+   <td style="text-align:right;"> 59 </td>
+   <td style="text-align:right;"> 1.196 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Bélgica </td>
+   <td style="text-align:right;"> 162 </td>
+   <td style="text-align:right;"> 2.566 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Bulgaria </td>
+   <td style="text-align:right;"> 147 </td>
+   <td style="text-align:right;"> 2.602 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Chile </td>
+   <td style="text-align:right;"> 178 </td>
+   <td style="text-align:right;"> 4.508 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Colombia </td>
+   <td style="text-align:right;"> 150 </td>
+   <td style="text-align:right;"> 4.829 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Corea del Sur </td>
+   <td style="text-align:right;"> 93 </td>
+   <td style="text-align:right;"> 2.447 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Croacia </td>
+   <td style="text-align:right;"> 175 </td>
+   <td style="text-align:right;"> 3.661 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Dinamarca </td>
+   <td style="text-align:right;"> 183 </td>
+   <td style="text-align:right;"> 5.103 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Eslovenia </td>
+   <td style="text-align:right;"> 145 </td>
+   <td style="text-align:right;"> 2.605 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Estonia </td>
+   <td style="text-align:right;"> 164 </td>
+   <td style="text-align:right;"> 2.613 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Finlandia </td>
+   <td style="text-align:right;"> 179 </td>
+   <td style="text-align:right;"> 2.797 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Italia </td>
+   <td style="text-align:right;"> 170 </td>
+   <td style="text-align:right;"> 3.203 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Letonia </td>
+   <td style="text-align:right;"> 147 </td>
+   <td style="text-align:right;"> 2.733 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Lituania </td>
+   <td style="text-align:right;"> 181 </td>
+   <td style="text-align:right;"> 3.162 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Malta </td>
+   <td style="text-align:right;"> 47 </td>
+   <td style="text-align:right;"> 3.040 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> México </td>
+   <td style="text-align:right;"> 211 </td>
+   <td style="text-align:right;"> 4.861 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Noruega </td>
+   <td style="text-align:right;"> 148 </td>
+   <td style="text-align:right;"> 5.265 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Países Bajos </td>
+   <td style="text-align:right;"> 123 </td>
+   <td style="text-align:right;"> 2.485 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Perú </td>
+   <td style="text-align:right;"> 206 </td>
+   <td style="text-align:right;"> 4.576 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> RAE de Hong Kong (China) </td>
+   <td style="text-align:right;"> 91 </td>
+   <td style="text-align:right;"> 2.347 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> República Dominicana </td>
+   <td style="text-align:right;"> 141 </td>
+   <td style="text-align:right;"> 2.949 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Rusia </td>
+   <td style="text-align:right;"> 352 </td>
+   <td style="text-align:right;"> 6.484 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Suecia </td>
+   <td style="text-align:right;"> 154 </td>
+   <td style="text-align:right;"> 2.454 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Taiwán </td>
+   <td style="text-align:right;"> 141 </td>
+   <td style="text-align:right;"> 3.799 </td>
+  </tr>
+</tbody>
+<tfoot><tr><td style="padding: 0; " colspan="100%">
+<span style="font-style: italic;">Nota: </span> <sup></sup> Elaboración propia en base a datos de ICSS 2016(N = 82.285)</td></tr></tfoot>
+</table>

@@ -1,0 +1,37 @@
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;border-bottom: 0;">
+<caption>Muestra de países participantes en ICCS</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Código ICCS </th>
+   <th style="text-align:left;"> Apoyo de los estudiantes a la igualdad de género </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> is3g24a </td>
+   <td style="text-align:left;"> a. Los hombres y las mujeres deben tener igualdad de oportunidades para participar en el gobierno.® </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> is3g24b </td>
+   <td style="text-align:left;"> b. Los hombres y las mujeres deben tener los mismos derechos en todos los sentidos.® </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> is3g24c </td>
+   <td style="text-align:left;"> c. Las mujeres deben permanecer fuera de la política. </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> is3g24d </td>
+   <td style="text-align:left;"> d. Cuando no hay muchos puestos de trabajo disponibles, los hombres deben tener más derecho a un trabajo que las mujeres. </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> is3g24e </td>
+   <td style="text-align:left;"> e. Los hombres y las mujeres deben obtener la igualdad de salario cuando están haciendo los mismos trabajos. ® </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> is3g24f </td>
+   <td style="text-align:left;"> f. Los hombres están mejor calificados para ser líderes políticos que las mujeres. </td>
+  </tr>
+</tbody>
+<tfoot><tr><td style="padding: 0; " colspan="100%">
+<span style="font-style: italic;">Nota: </span> <sup></sup> Elaboración propia en base a datos de ICSS 2016. (N = 82.285). La escala de respuesta utilizada corresponde a (1) Muy de acuerdo; (2) De acuerdo; (3) En desacuerdo; (4) Totalmente en desacuerdo. ® Items invertidos</td></tr></tfoot>
+</table>

@@ -45,6 +45,102 @@ div.tocify {
 
 # Análisis descriptivo 
 
+```{r tab-desc, results="asis", warning=FALSE}
+rm(list=ls())
+if (!require("pacman")) install.packages("pacman") # instalar pacman
+                            # cargar librerias
+pacman::p_load(dplyr,       # Manipulacion de datos
+               car,         # recodificar variables
+               sjlabelled,  # etiquetado de variables
+               sjmisc,      # descriptivos y frecuencias
+               sjPlot,      # tablas, plots y descriptivos
+               knitr,
+               kableExtra,
+               summarytools,
+               lavaan
+               )
+load(file = here::here("input/data-proc/study_1.RData"))
+
+df_countries <- df_study %>% na.omit()
+df_gender <- 
+ df_countries %>% 
+   select(starts_with("IS3G24"),
+          country,
+          country_name,
+          educ_max,
+          S_GENEQL)
+
+  for (i in names(df_gender %>% select(IS3G24A,IS3G24B,IS3G24E))) {
+    df_gender[[i]] <- sjmisc::rec(df_gender[[i]],rec = "rev")
+  }
+
+# CFA 2 dimension:.............................................................
+
+# Evidence from previous analyses (Miranda & Castillo, 2018) indicates that the gender equality scale would consider up of two dimensions: support for equal political rights between men and women and attitudes towards the ability to participate in public space
+
+cfa_gen2 <- '
+  eqpol=~ IS3G24A+IS3G24B+IS3G24E
+  eqpub=~ IS3G24C+IS3G24D+IS3G24F 
+  '
+fit_gen2 <- cfa(cfa_gen2,
+                data = df_gender)
+
+scores_gen2<- 
+lavaan::lavPredict(fit_gen2) %>% 
+  data.frame()
+df_gender <- bind_cols(df_gender,scores_gen2)
+# reescalar factor scores en 0 a 100
+df_gender$eqpol_i<- scales::rescale(x =df_gender$eqpol,to = c(0, 100))
+df_gender$eqpub_i<- scales::rescale(x =df_gender$eqpub,to = c(0, 100))
+df_gender$educ_b <- ifelse(test = (df_gender$educ_max==4),
+                           yes = "Terciaria o más",
+                           no = "Menos de terciaria")
+
+df_des <- select(df_gender,starts_with("IS3G24"),S_GENEQL,eqpol_i,eqpub_i,educ_b)
+set_label(df_des$S_GENEQL) <- "Apoyo de los estudiantes a la igualdad de género (original)"
+set_label(df_des$eqpol_i) <- "Puntaje factorial: Igualdad de derechos políticos" 
+set_label(df_des$eqpub_i) <- "Puntaje factorial: Participar en el espacio público" 
+set_label(df_des$educ_b) <- "Nivel educacional (Padres)"
+labels <- get_label(df_des)
+
+for (i in names(df_des %>% select(starts_with("IS3G24")))) {
+  df_des[[i]] <- factor(df_des[[i]],levels = 1:4,labels = get_labels(df_gender$IS3G24A))
+}
+
+set_label(df_des) <- labels
+
+# Css
+st_css()
+st_options(lang = "es",
+           footnote = NA,
+           bootstrap.css = F,
+           custom.css = here::here("input/css/dfsummary.css")
+           )
+
+# Df variables nivel 1
+df<- dfSummary(df_des,
+               plain.ascii = FALSE,
+               style = "grid",
+               tmp.img.dir = "/tmp",
+               graph.magnif = TRUE,
+               headings = F,  # encabezado
+               varnumbers = F, # num variable
+               labels.col = T, # etiquetas
+               na.col = F,    # missing
+               graph.col = T, # plot
+               valid.col = T, # n valido
+               col.widths = c(700,10,10,10,10)
+               )
+df$Variable <- NULL # delete variable column
+view(df,
+     file = here::here("output/tables/desc01.html")
+     ) # Ver tabla en un archivo HTML
+webshot::webshot(url =here::here("output/tables/desc01.html"),
+        file =here::here("output/tables/desc01.png")) # Remover archivo HTML
+print(df, method = "render")
+```
+
+
 ```{r tab-count, echo=FALSE}
 #Tabla por países, escuelas y estudiantes
 rm(list=ls())
@@ -66,6 +162,7 @@ schools <- countries %>% group_by(country_name) %>% summarise(schools=n())
 students <- df_countries %>% group_by(country_name) %>% summarise(students=n())
 
 tab_countries <- left_join(schools,students)
+tab_count <- 
 tab_countries %>% 
   kable(col.names = c("País","Total de escuelas","Total de estudiantes"),
         booktabs = T,
@@ -77,6 +174,8 @@ tab_countries %>%
            general_title = "Nota: ",
            footnote_as_chunk = T,
            threeparttable = T)
+tab_count
+tab_count %>% cat(.,file = here::here("output/tables/tab_count.xls"))
 ```
 
 ```{r tab-gender}
@@ -103,6 +202,7 @@ df_countries %>%
 df_gender$items <- tolower(rownames(df_gender))
 df_gender <- select(df_gender,items,".")
   
+tab_gender <- 
   df_gender %>% 
   kable(col.names = c("Código ICCS","Apoyo de los estudiantes a la igualdad de género"),
         booktabs = T,
@@ -115,6 +215,8 @@ df_gender <- select(df_gender,items,".")
            general_title = "Nota: ",
            footnote_as_chunk = T,
            threeparttable = T)
+tab_gender  
+tab_gender %>% cat(.,file = here::here("output/tables/tab_gender.xls"))  
 ```
 
 ```{r cor-gender, fig.cap="Matriz de correlaciones policóricas para Apoyo de los estudiantes a la igualdad de género",fig.dim=c(8, 6)}
@@ -147,12 +249,16 @@ for (i in names(df_countries %>% select(IS3G24A,IS3G24B,IS3G24E))) {
     dplyr::select(starts_with("IS3G24")) %>%
     lavaan::lavCor(., ordered=names(.))
   
+  # cor_ci <- psych::corCi(df_countries %>% 
+  #                          dplyr::select(starts_with("IS3G24")),
+  #                        plot = F,poly = T)
+  # 
   diag(cor_gender) = NA
 
   rownames(cor_gender) <-c(
       "A. Hombres/Mujeres igualdad en gobierno ®",
       "B. Hombres/Mujeres mismos derechos ®",
-      "C. Mujeres permanerer fuera de la política",
+      "C. Mujeres permanecen fuera de la política",
       "D. Trabajo, prioridad para hombres",
       "E. Hombres/mujeres igualdad salarial ®",
       "F. Hombres mejores lideres políticos"
@@ -166,7 +272,8 @@ for (i in names(df_countries %>% select(IS3G24A,IS3G24B,IS3G24E))) {
     tl.col = "black",
     col=colorRampPalette(c("white","#0068DC"))(8),
     bg = "white",
-    na.label = "-")
+    na.label = "-",
+    order = "hclust")
 ```
 
 ```{r tab-nacion}
@@ -276,7 +383,7 @@ load(file = here::here("input/data-proc/study_1.RData"))
 df_countries <- df_study %>% na.omit()
 df_gender <- 
  df_countries %>% 
-   select(starts_with("IS3G24"))
+   select(starts_with("IS3G24"),country_name)
 
 for (i in names(df_countries %>% select(IS3G24A,IS3G24B,IS3G24E))) {
   df_countries[[i]] <- sjmisc::rec(df_countries[[i]],rec = "rev")
@@ -289,7 +396,13 @@ names(df_gender)
 cfa_gen1 <- '
   eqgen=~ IS3G24A+IS3G24B+IS3G24C+IS3G24D+IS3G24E+IS3G24F
 '
-fit_gen1 <- cfa(cfa_gen1,data = df_gender)
+var_or <- c("IS3G24A","IS3G24B","IS3G24C","IS3G24D","IS3G24E","IS3G24F") 
+
+
+fit_gen1 <- cfa(cfa_gen1,data = df_gender,
+                group = "country_name",  #check
+                ordered = var_or #check
+                )
 
 # lavaan::fitmeasures(fit_gen1)[c("chisq","df","cfi","tli","rmsea")]
 
@@ -301,8 +414,12 @@ cfa_gen2 <- '
   eqpol=~ IS3G24A+IS3G24B+IS3G24E
   eqpub=~ IS3G24C+IS3G24D+IS3G24F 
   '
+var_or <- c("IS3G24A","IS3G24B","IS3G24C","IS3G24D","IS3G24E","IS3G24F") 
 fit_gen2 <- cfa(cfa_gen2,
-                data = df_gender)
+                data = df_gender,
+                group = "country_name", #check
+                ordered = var_or #check                
+                )
 
 # lavaan::fitmeasures(fit_gen2)[c("chisq","df","cfi","tli","rmsea")]
 
@@ -333,7 +450,9 @@ fit_gen2 <- cfa(cfa_gen2,
                   font_size = 10,
                   latex_options = "HOLD_position",
                   bootstrap_options=c("striped", "bordered"))
-  table_cfa_fits 
+  table_cfa_fits
+ table_cfa_fits %>% cat(.,file = here::here("output/tables/tab_table_cfa_fits.xls"))
+ 
 ```
 
 ```{r cfa-gen1-count}
@@ -370,8 +489,11 @@ cfa_gen1 <- '
 '
 
 # estimar modelo por paises
+var_or <- c("IS3G24A","IS3G24B","IS3G24C","IS3G24D","IS3G24E","IS3G24F") 
 df_paises <- split(df_gender, df_gender$country_name)
-results = lapply(df_paises, function(df_gender) lavaan::cfa(cfa_gen1,data = df_gender))
+results = lapply(df_paises, function(df_gender) lavaan::cfa(cfa_gen1,data = df_gender,
+                                                            ordered = var_or # check
+                                                            ))
 
 #extraer fitmeasures por paises
 results_list<- lapply(results, function(results) data.frame(t(lavaan::fitmeasures(results)[c("chisq","df","cfi","tli","rmsea")])))
@@ -406,7 +528,14 @@ nobs_n <- data.table::rbindlist(nobs_list) %>%
                   font_size = 10,
                   latex_options = "HOLD_position",
                   bootstrap_options=c("striped", "bordered"))
-  tab_cfa_count_1d 
+  tab_cfa_count_1d
+ tab_cfa_count_1d %>% 
+   cat(.,file = here::here("output/tables/tab_cfa_count_1d.xls"))   
+ sjmisc::frq(sum_fit$cfi>=0.95)
+ sjmisc::frq(sum_fit$tli>=0.95)
+ sjmisc::frq(sum_fit$rmsea<=0.06)
+ 
+sjmisc::frq(sum_fit$cfi>=0.95 | sum_fit$tli>=0.95 | sum_fit$rmsea<=0.06)
 ```
 
 ```{r cfa-gen2-count}
@@ -446,8 +575,11 @@ cfa_gen2 <- '
   '
 
 # estimar modelo por paises
+var_or <- c("IS3G24A","IS3G24B","IS3G24C","IS3G24D","IS3G24E","IS3G24F") 
 df_paises <- split(df_gender, df_gender$country_name)
-results = lapply(df_paises, function(df_gender) lavaan::cfa(cfa_gen2,data = df_gender))
+results = lapply(df_paises, function(df_gender) lavaan::cfa(cfa_gen2,data = df_gender, 
+                                                            ordered =var_or # check
+                                                            ))
 
 #extraer fitmeasures por paises
 results_list<- lapply(results, function(results) data.frame(t(lavaan::fitmeasures(results)[c("chisq","df","cfi","tli","rmsea")])))
@@ -484,9 +616,16 @@ nobs_n <- data.table::rbindlist(nobs_list) %>%
                   latex_options = "HOLD_position",
                   bootstrap_options=c("striped", "bordered"))
   tab_cfa_count_2d 
+ tab_cfa_count_2d %>% 
+   cat(.,file = here::here("output/tables/tab_cfa_count_2d.xls"))  
+ 
+ 
+ sjmisc::frq(sum_fit$cfi>=0.95)
+ sjmisc::frq(sum_fit$tli>=0.95)
+ sjmisc::frq(sum_fit$rmsea<=0.06)
 ```
 
-```{r plots-fit, fig.dim= c(8, 6)}
+```{r plots-fit, fig.dim= c(10, 4), fig.cap='Resumen de ajuste según países para modelo de medición de Igualdad de género (dos dimensiones)'}
 rm(list=ls())
 if (!require("pacman")) install.packages("pacman") # instalar pacman
                             # cargar librerias
@@ -497,7 +636,8 @@ pacman::p_load(dplyr,       # Manipulacion de datos
                sjPlot,      # tablas, plots y descriptivos
                knitr,
                kableExtra, 
-               lavaan
+               lavaan,
+               ggplot2
                )
 load(file = here::here("input/data-proc/study_1.RData"))
 
@@ -519,8 +659,10 @@ cfa_gen1 <- '
 '
 
 # estimar modelo por paises
+var_or <- c("IS3G24A","IS3G24B","IS3G24C","IS3G24D","IS3G24E","IS3G24F") 
 df_paises <- split(df_gender, df_gender$country_name)
-results1 = lapply(df_paises, function(df_gender) lavaan::cfa(cfa_gen1,data = df_gender))
+results1 = lapply(df_paises, function(df_gender) lavaan::cfa(cfa_gen1,data = df_gender,ordered = var_or 
+))
 
 #extraer fitmeasures por paises
 results1_list<- lapply(results1, function(results1) data.frame(t(lavaan::fitmeasures(results1)[c("chisq","df","cfi","tli","rmsea")])))
@@ -541,8 +683,6 @@ nobs_n <- data.table::rbindlist(nobs_list) %>%
   
 # CFA 2 dimension:.............................................................
 
-# Evidence from previous analyses (Miranda & Castillo, 2018) indicates that the gender equality scale would consider up of two dimensions: support for equal political rights between men and women and attitudes towards the ability to participate in public space
-
 cfa_gen2 <- '
   eqpol=~ IS3G24A+IS3G24B+IS3G24E
   eqpub=~ IS3G24C+IS3G24D+IS3G24F 
@@ -550,7 +690,7 @@ cfa_gen2 <- '
 
 # estimar modelo por paises
 df_paises <- split(df_gender, df_gender$country_name)
-results2 = lapply(df_paises, function(df_gender) lavaan::cfa(cfa_gen2,data = df_gender))
+results2 = lapply(df_paises, function(df_gender) lavaan::cfa(cfa_gen2,data = df_gender,ordered = var_or))
 
 #extraer fitmeasures por paises
 results2_list<- lapply(results2, function(results2) data.frame(t(lavaan::fitmeasures(results2)[c("chisq","df","cfi","tli","rmsea")])))
@@ -569,46 +709,59 @@ nobs_n <- data.table::rbindlist(nobs_list) %>%
   sum_fit2$nobs <- nobs_n$obs
   sum_fit2 <- dplyr::select(sum_fit2,country,"chisq","df", nobs,"cfi","tli","rmsea")
   
-  
 # fit_meas <- left_join(sum_fit1,sum_fit2, by = c("country"),suffix=c("_d1","_d2")) 
 sum_fit1$dim <- 1
 sum_fit2$dim <- 2
+
 fit_meas <- bind_rows(sum_fit1,sum_fit2)
+fit_meas$dim <- factor(fit_meas$dim,
+                       levels = c(1,2), 
+                       labels = c("Una","Dos"))
+
+theme_set(theme_bw())
 plot_chi<- plot_grpfrq(var.cnt = fit_meas$chisq,
                        var.grp=fit_meas$dim,
                        type = "boxplot",
                        ylim = c(0,5500),
                        title = "",
-                       axis.labels = c("Una","Dos"),
                        axis.titles = c("χ²"),
-                       show.legend = F)
+                       show.legend = F,
+                       coord.flip = T) +
+  scale_x_discrete(limits=rev, labels = c("Dos","Una"))
+
+  
 plot_cfi<- plot_grpfrq(var.cnt = fit_meas$cfi,  
                        var.grp=fit_meas$dim,
                        type = "boxplot",
-                       ylim = c(0,1.3),
-                       title = "",                       
-                       axis.labels = c("Una","Dos"),
-                       axis.titles = c("CFI"),
-                       show.legend = F)
+                       ylim = c(0,1.5),
+                       title = "CFI",                       
+                       axis.titles = c(""),
+                       show.legend = F, coord.flip = T) +
+  scale_x_discrete(limits=rev, labels = c("Dos","Una")) + 
+  geom_hline(yintercept=0.95, linetype="dashed", color = "grey")
+
 plot_tli<- plot_grpfrq(var.cnt = fit_meas$tli,  
                        var.grp=fit_meas$dim,
                        type = "boxplot",
-                       ylim = c(0,1.3),
-                       title = "",                       
-                       axis.labels = c("Una","Dos"),
-                       axis.titles = c("TLI"),
-                       show.legend = F)
+                       ylim = c(0,1.5),
+                       title = "TLI",                       
+                       axis.titles = c(""),
+                       show.legend = F, coord.flip = T) +
+  scale_x_discrete(limits=rev, labels = c("Dos","Una")) +
+  geom_hline(yintercept=0.95, linetype="dashed", color = "grey")  
 plot_rms<- plot_grpfrq(var.cnt = fit_meas$rmsea,
                        var.grp=fit_meas$dim,
                        type = "boxplot",
                        ylim = c(0,1.3),
-                       title = "",                       
+                       title = "RMSEA",                       
                        axis.labels = c("Una","Dos"),
-                       axis.titles = c("RMSEA"),
-                       show.legend = F)
+                       axis.titles = c(""),
+                       show.legend = F, coord.flip = T) + 
+  scale_x_discrete(limits=rev, labels = c("Dos","Una")) + 
+  geom_hline(yintercept=0.05, linetype="dashed", color = "grey")  
 
 plots_fit<- 
-  gridExtra::grid.arrange(plot_cfi,plot_tli,plot_rms, ncol=3) 
+  gridExtra::grid.arrange(plot_cfi,plot_tli,plot_rms, ncol=1) 
 ```
 
 ```{r inv-genero}
@@ -648,14 +801,48 @@ cfa_gen2 <- '
   eqpub=~ IS3G24C+IS3G24D+IS3G24F 
   '
 
-  inv01 <- semTools::measurementInvariance(model=cfa_gen2,
-                                           data=df_gender, 
-                                           group="country",estimator = "ML",strict=TRUE,quiet = T)
+var_or <- c("IS3G24A","IS3G24B","IS3G24C","IS3G24D","IS3G24E","IS3G24F") 
+  # inv01 <- semTools::measurementInvariance(model=cfa_gen2,
+  #                                          data=df_gender,
+  #                                          group="country",estimator = "ML",strict=TRUE,quiet = T)
+  # inv02 <- semTools::measurementInvarianceCat(model=cfa_gen2,
+  #                                             data=df_gender,
+  #                                          group="country",estimator = "DWLS",
+  #                                          strict=TRUE,quiet = T,ordered =var_or)
+  # save(inv02, file = here::here("output/tables/invarianza_cat.RData"))
 
-  conf  <- inv01$fit.configural
-  weak  <- inv01$fit.loadings
-  strong<- inv01$fit.intercepts
-  strict<- inv01$fit.residuals
+load(file = here::here("output/tables/invarianza_cat.RData"))
+  
+  # # configural invariance
+  # fit.conf <- cfa(model=cfa_gen2,
+  #                 data=df_gender,
+  #                 group="country",estimator = "WLSMV",ordered = var_or)
+  # 
+  # # weak invariance
+  # fit.load <- cfa(model=cfa_gen2,
+  #                 data=df_gender,
+  #                 group="country",estimator = "WLSMV",
+  #                 group.equal = "loadings",ordered = var_or)
+  # 
+  # # strong invariance
+  # fit.intercepts <- cfa(model=cfa_gen2,
+  #                       data=df_gender,
+  #                       group="country",estimator = "WLSMV",
+  #                       group.equal = c("intercepts", "loadings"), 
+  #                       ordered = var_or)
+  # 
+  # # strict invariance
+  # fit.residuals <- cfa(model=cfa_gen2,
+  #                       data=df_gender,
+  #                       group="country",estimator = "WLSMV",
+  #                       group.equal = c("intercepts", "loadings","residuals"), 
+  #                       ordered = var_or)
+  # 
+
+  conf  <- inv02$fit.configural
+  weak  <- inv02$fit.loadings
+  strong<- inv02$fit.thresholds
+  strict<- inv02$fit.residuals
 
   tab01<- lavaan::anova(conf,weak,strong,strict,SB.classic=TRUE) %>%
     dplyr::as_tibble() %>%
@@ -665,10 +852,10 @@ cfa_gen2 <- '
            decision=ifelse(pvalue>0.05,yes = "Acepta",no = "Rechaza"),
            model=c("Configural","Débil","Fuerte","Estricta"))
 
-  fit.meas<- dplyr::bind_rows(lavaan::fitmeasures(inv01$fit.configural,output ="matrix")[c("chisq","df","cfi","rmsea","rmsea.ci.lower","rmsea.ci.upper"),],
-                              lavaan::fitmeasures(inv01$fit.loadings,  output ="matrix")[c("chisq","df","cfi","rmsea","rmsea.ci.lower","rmsea.ci.upper"),],
-                              lavaan::fitmeasures(inv01$fit.intercepts,output ="matrix")[c("chisq","df","cfi","rmsea","rmsea.ci.lower","rmsea.ci.upper"),],
-                              lavaan::fitmeasures(inv01$fit.residuals, output ="matrix")[c("chisq","df","cfi","rmsea","rmsea.ci.lower","rmsea.ci.upper"),])
+  fit.meas <- dplyr::bind_rows(lavaan::fitmeasures(conf, output ="matrix")[c("chisq","df","cfi","rmsea","rmsea.ci.lower","rmsea.ci.upper"),],
+                               lavaan::fitmeasures(weak, output ="matrix")[c("chisq","df","cfi","rmsea","rmsea.ci.lower","rmsea.ci.upper"),],
+                               lavaan::fitmeasures(strong, output ="matrix")[c("chisq","df","cfi","rmsea","rmsea.ci.lower","rmsea.ci.upper"),],
+                               lavaan::fitmeasures(strict, output ="matrix")[c("chisq","df","cfi","rmsea","rmsea.ci.lower","rmsea.ci.upper"),])
 
   # compute differences in chisq, df, cfi and rmsea (90%, lower.ci - upper.ci )
   fit.meas<- fit.meas %>%
@@ -685,9 +872,10 @@ cfa_gen2 <- '
     dplyr::select(model,chisqt,cfi,rmsea.ci,diff.chi2,diff.cfi,diff.rmsea,decision)
 
 col.nam <- c("Model","$\\chi^2 (\\text{df})$","CFI","RMSEA (90 CI)",
-               "$\\Delta \\chi^2 (\\Delta \\text{df}$)","$\\Delta \\text{CFI}$","$\\Delta \\text{RMSEA}$","Decision")
+               "$\\Delta \\chi^2 (\\Delta \\text{df}$)","$\\Delta \\text{CFI}$","$\\Delta \\text{RMSEA}$","Decisión")
   footnote <- paste0("***p < 0.001")
 
+tab_inv_genero <-   
   knitr::kable(tab.inv, col.names = col.nam, align = "l",
         booktabs=TRUE,
         # format = table_format,
@@ -697,8 +885,11 @@ col.nam <- c("Model","$\\chi^2 (\\text{df})$","CFI","RMSEA (90 CI)",
                               latex_options = "HOLD_position",
                               bootstrap_options=c("striped", "bordered"),
                               font_size = 10) %>%
-    kableExtra::footnote(general = footnote, footnote_as_chunk = T)
+    kableExtra::footnote(general = footnote, footnote_as_chunk = T,general_title = "Nota: ")
 
+  
+tab_inv_genero  
+tab_inv_genero %>% cat(.,file = here::here("output/tables/tab_inv_genero.xls")) 
 ```
 
 * sort de tablas de fit meas por país y ordenar según x2
@@ -707,7 +898,7 @@ col.nam <- c("Model","$\\chi^2 (\\text{df})$","CFI","RMSEA (90 CI)",
 
 ## Modelos
 
-```{r tab-cor, cache=TRUE}
+```{r tab-cor, eval=FALSE, cache=TRUE, include=FALSE}
 # genero~educacion
 options("mc.cores"=4) 
 rm(list=ls())
@@ -737,43 +928,78 @@ df_gender <-
     df_gender[[i]] <- sjmisc::rec(df_gender[[i]],rec = "rev")
   }
 
-# CFA 2 dimension:.............................................................
+# CFA 1 y 2 dimension:.............................................................
 
-# Evidence from previous analyses (Miranda & Castillo, 2018) indicates that the gender equality scale would consider up of two dimensions: support for equal political rights between men and women and attitudes towards the ability to participate in public space
+# modelo 1 dimension
+var_or <- c("IS3G24A","IS3G24B","IS3G24C","IS3G24D","IS3G24E","IS3G24F") 
+
+cfa_gen1 <- '
+  eqgen=~ IS3G24A+IS3G24B+IS3G24C+IS3G24D+IS3G24E+IS3G24F
+'
+# fit_gen1 <- cfa(cfa_gen1,
+#                 data = df_gender,
+#                 # ordered = var_or,
+#                 group = "country_name",
+#                 missing = "ML"                
+#                 )
+
+# modelo 2 dimensiones
+var_or <- c("IS3G24A","IS3G24B","IS3G24C","IS3G24D","IS3G24E","IS3G24F") 
 
 cfa_gen2 <- '
   eqpol=~ IS3G24A+IS3G24B+IS3G24E
   eqpub=~ IS3G24C+IS3G24D+IS3G24F 
   '
-fit_gen2 <- cfa(cfa_gen2,
-                data = df_gender)
+# fit_gen2 <- cfa(cfa_gen2,
+#                 data = df_gender,
+#                 # ordered = var_or,
+#                 group = "country_name", 
+#                 missing = "ML"
+#                 )
 
-# semPlot::semPaths(fit_gen2, what = "std")
+# tictoc::tic()
+# scores_gen1<-
+# lavaan::lavPredict(fit_gen1,assemble = T,method = "EBM") %>%
+#   data.frame()
+# tictoc::toc() # 6.8 minutos
 
-# a <- psych::cor.ci(df_paises$Alemania,poly=TRUE, plot=F)
-# 
-# psych::cor.ci(df_paises$Alemania,poly=TRUE, plot=F)$rho[4,1:3]
-# 
-# a$ci[c("S_GEN-edc_m","eqpol-edc_m","eqpub-edc_m"),]$p
+# summary(scores_gen1)
 
-scores_gen2<- 
-lavaan::lavPredict(fit_gen2) %>% 
-  data.frame()
-df_gender <- bind_cols(df_gender,scores_gen2)
+# save(scores_gen1,file = here::here("output/tables/scores_gen1.RData"))
+load(file = here::here("output/tables/scores_gen1.RData"))
+
+# tictoc::tic()
+# scores_gen2<-
+# lavaan::lavPredict(fit_gen2,assemble = T,method = "EBM") %>%
+#   data.frame()
+# tictoc::toc()
+
+# summary(scores_gen2)
+
+# save(scores_gen2,file = here::here("output/tables/scores_gen2.RData"))
+load(file = here::here("output/tables/scores_gen2.RData"))
+
+df_gender <- bind_cols(df_gender,
+                       dplyr::select(scores_gen1,"eqgen"),                       
+                       scores_gen2[,c("eqpol","eqpub")]
+                       )
 
 # estimar correlaciones por paises
-df_paises <- split(df_gender %>% select(S_GENEQL,eqpol,eqpub,educ_max), df_gender$country_name)
-
-# df_cor = lapply(df_paises, function(df_paises) data.frame(t(cor(df_paises)[4,1:3])))
-# df_cor_poly = lapply(df_paises, function(df_paises) data.frame(t(psych::mixedCor(data = df_paises)$rho[4,1:3])))
-# df_pval = lapply(df_paises, function(df_paises) data.frame(t(psych::corr.p(r = cor(x = df_paises),n = dim(df_paises)[1])[["p"]][4,])))
+df_paises <- split(df_gender %>% select(eqgen,eqpol,eqpub,educ_max), df_gender$country_name)
 
 df_cor_mix = 
   lapply(df_paises, 
-         function(df_paises) data.frame(t(psych::cor.ci(df_paises,poly=TRUE, plot=F,)$rho[4,1:3])))
+         function(df_paises)
+           data.frame(t(psych::cor.ci(
+             df_paises, poly = TRUE, plot = F
+           )$rho[4, 1:3])))
+
 df_cor_mix_p = 
   lapply(df_paises, 
-         function(df_paises) data.frame(t(psych::cor.ci(df_paises,poly=TRUE, plot=F)$ci[c("S_GEN-edc_m","eqpol-edc_m","eqpub-edc_m"),]$p)))
+         function(df_paises)
+           data.frame(t(psych::cor.ci(
+             df_paises, poly = TRUE, plot = F
+           )$ci[c("eqgen-edc_m", "eqpol-edc_m", "eqpub-edc_m"), ]$p)))
 
 df_corr <- 
 data.table::rbindlist(df_cor_mix) %>% 
@@ -784,16 +1010,19 @@ df_pvalues <-
 data.table::rbindlist(df_cor_mix_p) %>% 
   mutate(country=names(df_cor_mix_p)) %>%
   select(country,everything()) %>% 
-  rename(S_GENEQL=X1,
+  rename(eqgen=X1,
          eqpol=X2,
          eqpub=X3)
 
 cor_tab <- 
   left_join(df_corr,df_pvalues, by="country",suffix = c("_r","_p"))
-cor_tab$S_GENEQL <- paste0(round(cor_tab$S_GENEQL_r,3),gtools::stars.pval(cor_tab$S_GENEQL_p))
-cor_tab$eqpol <- paste0(round(cor_tab$eqpol_r,3),gtools::stars.pval(cor_tab$eqpol_p))
-cor_tab$eqpub <- paste0(round(cor_tab$eqpub_r,3),gtools::stars.pval(cor_tab$eqpub_p))
-cor_tab <- cor_tab %>% select(country,S_GENEQL,eqpub,eqpol)
+cor_tab$eqgen <- paste0(round(cor_tab$eqgen_r,3),
+                        gtools::stars.pval(cor_tab$eqgen_p))
+cor_tab$eqpol <- paste0(round(cor_tab$eqpol_r,3),
+                        gtools::stars.pval(cor_tab$eqpol_p))
+cor_tab$eqpub <- paste0(round(cor_tab$eqpub_r,3),
+                        gtools::stars.pval(cor_tab$eqpub_p))
+cor_tab <- cor_tab %>% select(country,eqgen,eqpub,eqpol)
 
 cor_tab %>% 
   kable(col.names = c("","Escala original",
@@ -811,7 +1040,7 @@ igualdad de género") %>%
     column_spec(2:4, width = "4cm")
 ```
 
-```{r tab-mean}
+```{r tab-lm-mean}
 # genero~educacion
 rm(list=ls())
 if (!require("pacman")) install.packages("pacman") # instalar pacman
@@ -820,7 +1049,7 @@ pacman::p_load(dplyr,       # Manipulacion de datos
                car,         # recodificar variables
                sjlabelled,  # etiquetado de variables
                sjmisc,      # descriptivos y frecuencias
-               sjPlot,      # tablas, plots y descriptivos
+               sjPlot,      # tablas, plots y descriptivos 
                knitr,
                kableExtra, 
                lavaan, ggplot2,tidymodels
@@ -840,28 +1069,61 @@ df_gender <-
     df_gender[[i]] <- sjmisc::rec(df_gender[[i]],rec = "rev")
   }
 
-# CFA 2 dimension:.............................................................
+# CFA 1 y 2 dimension:.............................................................
 
-# Evidence from previous analyses (Miranda & Castillo, 2018) indicates that the gender equality scale would consider up of two dimensions: support for equal political rights between men and women and attitudes towards the ability to participate in public space
+# modelo 1 dimension
+var_or <- c("IS3G24A","IS3G24B","IS3G24C","IS3G24D","IS3G24E","IS3G24F") 
+
+cfa_gen1 <- '
+  eqgen=~ IS3G24A+IS3G24B+IS3G24C+IS3G24D+IS3G24E+IS3G24F
+'
+# fit_gen1 <- cfa(cfa_gen1,
+#                 data = df_gender, 
+#                 ordered = var_or,
+#                 group = "country_name"
+#                 )
+
+# modelo 2 dimensiones
+var_or <- c("IS3G24A","IS3G24B","IS3G24C","IS3G24D","IS3G24E","IS3G24F") 
 
 cfa_gen2 <- '
   eqpol=~ IS3G24A+IS3G24B+IS3G24E
   eqpub=~ IS3G24C+IS3G24D+IS3G24F 
   '
-fit_gen2 <- cfa(cfa_gen2,
-                data = df_gender)
+# fit_gen2 <- cfa(cfa_gen2,
+#                 data = df_gender, 
+#                 ordered = var_or,
+#                 group = "country_name"
+#                 )
 
+# tictoc::tic()
+# scores_gen1<- 
+# lavaan::lavPredict(fit_gen1,assemble = T) %>% 
+#   data.frame()
+# tictoc::toc() # 6.8 minutos
 
-scores_gen2<- 
-lavaan::lavPredict(fit_gen2) %>% 
-  data.frame()
-df_gender <- bind_cols(df_gender,scores_gen2)
+#  save(scores_gen1,file = here::here("output/tables/scores_gen1.RData"))
+load(file = here::here("output/tables/scores_gen1.RData"))
+# tictoc::tic()
+# scores_gen2<- 
+# lavaan::lavPredict(fit_gen2,assemble = T) %>% 
+#   data.frame()
+# tictoc::toc()
+
+# save(scores_gen2,file = here::here("output/tables/scores_gen2.RData"))
+load(file = here::here("output/tables/scores_gen2.RData"))
+
+df_gender <- bind_cols(df_gender,
+                       dplyr::select(scores_gen1,"eqgen"),                       
+                       scores_gen2[,c("eqpol","eqpub")]
+                       )
+df_paises <- split(df_gender, df_gender$country_name)
 # reescalar factor scores en 0 a 100
+df_gender$eqgen_i<- scales::rescale(x =df_gender$eqgen,to = c(0, 100))
 df_gender$eqpol_i<- scales::rescale(x =df_gender$eqpol,to = c(0, 100))
 df_gender$eqpub_i<- scales::rescale(x =df_gender$eqpub,to = c(0, 100))
 
 # estimar regresiones por paises
-df_paises <- split(df_gender %>% select(S_GENEQL,eqpol,eqpub,educ_max), df_gender$country_name)
 df_gender$educ_b <- ifelse(test = (df_gender$educ_max==4),yes = 1,no = 0)
 table(df_gender$educ_b)
 sjmisc::frq(df_gender$educ_b)
@@ -872,7 +1134,7 @@ sjmisc::frq(df_gender$educ_b)
 df_lm_gen <- 
 df_gender %>%
   group_by(country_name) %>%
-  group_map(~ broom::tidy(lm(S_GENEQL ~ educ_b, data = .x)),.keep = T)
+  group_map(~ broom::tidy(lm(eqgen_i ~ educ_b, data = .x)),.keep = T)
 
 df_lm_eqpol <- 
 df_gender %>%
@@ -884,6 +1146,7 @@ df_gender %>%
   group_by(country_name) %>%
   group_map(~ broom::tidy(lm(eqpub_i ~ educ_b, data = .x)),.keep = T)
 
+# join resultados de modelos 
 results_gen <- 
   data.table::rbindlist(df_lm_gen) %>% 
   select(term,estimate,p.value) %>% 
@@ -904,16 +1167,18 @@ results_eqpub <-
   mutate(country=names(df_paises)) %>% 
   select(country,est_c=estimate,p_c=p.value)
 
-
+# merge de datos con estimaciones............
 lm_tab <- 
   left_join(results_gen,results_eqpol, by="country") %>% 
   left_join(results_eqpub, by="country")
 
-lm_tab$S_GENEQL <- paste0(round(lm_tab$est_a,3),gtools::stars.pval(lm_tab$p_a))
+lm_tab$eqgen    <- paste0(round(lm_tab$est_a,3),gtools::stars.pval(lm_tab$p_a))
 lm_tab$eqpol    <- paste0(round(lm_tab$est_b,3),gtools::stars.pval(lm_tab$p_b))
 lm_tab$eqpub    <- paste0(round(lm_tab$est_c,3),gtools::stars.pval(lm_tab$p_c))
-lm_tab <- lm_tab %>% select(country,S_GENEQL,eqpub,eqpol)
+lm_tab <- lm_tab %>% select(country,eqgen,eqpub,eqpol)
 
+
+tab_mean_gender<- 
 lm_tab %>% 
   kable(col.names = c("","Escala original",
                       "Participar en el espacio público", 
@@ -929,11 +1194,11 @@ igualdad de género") %>%
     add_header_above(c(" " = 1, "Padres tienen/no tienen educación universitaria" = 3),align = "left") %>% 
     column_spec(2:4, width = "4cm")
 
-
-
+tab_mean_gender
+tab_mean_gender %>% cat(.,file = here::here("output/tables/tab_mean_gender.xls"))
 ```
 
-```{r plot-mean}
+```{r plot-bar-mean-gen-educ}
 # genero~educacion
 rm(list=ls())
 if (!require("pacman")) install.packages("pacman") # instalar pacman
@@ -945,7 +1210,9 @@ pacman::p_load(dplyr,       # Manipulacion de datos
                sjPlot,      # tablas, plots y descriptivos
                knitr,
                kableExtra, 
-               lavaan, ggplot2,tidymodels
+               lavaan, ggplot2,tidymodels,
+               tidyverse,
+               ggh4x # para el facet anidado
                )
 load(file = here::here("input/data-proc/study_1.RData"))
 
@@ -962,40 +1229,122 @@ df_gender <-
     df_gender[[i]] <- sjmisc::rec(df_gender[[i]],rec = "rev")
   }
 
-# CFA 2 dimension:.............................................................
+# CFA 1 y 2 dimension:.............................................................
 
-# Evidence from previous analyses (Miranda & Castillo, 2018) indicates that the gender equality scale would consider up of two dimensions: support for equal political rights between men and women and attitudes towards the ability to participate in public space
+# modelo 1 dimension
+var_or <- c("IS3G24A","IS3G24B","IS3G24C","IS3G24D","IS3G24E","IS3G24F") 
+
+cfa_gen1 <- '
+  eqgen=~ IS3G24A+IS3G24B+IS3G24C+IS3G24D+IS3G24E+IS3G24F
+'
+# fit_gen1 <- cfa(cfa_gen1,
+#                 data = df_gender, 
+#                 ordered = var_or,
+#                 group = "country_name"
+#                 )
+
+# modelo 2 dimensiones
+var_or <- c("IS3G24A","IS3G24B","IS3G24C","IS3G24D","IS3G24E","IS3G24F") 
 
 cfa_gen2 <- '
   eqpol=~ IS3G24A+IS3G24B+IS3G24E
   eqpub=~ IS3G24C+IS3G24D+IS3G24F 
   '
-fit_gen2 <- cfa(cfa_gen2,
-                data = df_gender)
+# fit_gen2 <- cfa(cfa_gen2,
+#                 data = df_gender, 
+#                 ordered = var_or,
+#                 group = "country_name"
+#                 )
 
+# tictoc::tic()
+# scores_gen1<- 
+# lavaan::lavPredict(fit_gen1,assemble = T) %>% 
+#   data.frame()
+# tictoc::toc() # 6.8 minutos
 
-scores_gen2<- 
-lavaan::lavPredict(fit_gen2) %>% 
-  data.frame()
-df_gender <- bind_cols(df_gender,scores_gen2)
+#  save(scores_gen1,file = here::here("output/tables/scores_gen1.RData"))
+load(file = here::here("output/tables/scores_gen1.RData"))
+# tictoc::tic()
+# scores_gen2<- 
+# lavaan::lavPredict(fit_gen2,assemble = T) %>% 
+#   data.frame()
+# tictoc::toc()
+
+# save(scores_gen2,file = here::here("output/tables/scores_gen2.RData"))
+load(file = here::here("output/tables/scores_gen2.RData"))
+
+df_gender <- bind_cols(df_gender,
+                       dplyr::select(scores_gen1,"eqgen"),                       
+                       scores_gen2[,c("eqpol","eqpub")]
+                       )
+df_paises <- split(df_gender, df_gender$country_name)
 # reescalar factor scores en 0 a 100
-df_gender$eqpol_i<- scales::rescale(x =df_gender$eqpol,to = c(0, 100))
+df_gender$eqgen_i<- scales::rescale(x =df_gender$eqgen,to = c(0, 100))
 df_gender$eqpub_i<- scales::rescale(x =df_gender$eqpub,to = c(0, 100))
+df_gender$eqpol_i<- scales::rescale(x =df_gender$eqpol,to = c(0, 100))
 
 # estimar regresiones por paises
-df_paises <- split(df_gender %>% select(S_GENEQL,eqpol,eqpub,educ_max), df_gender$country_name)
 df_gender$educ_b <- ifelse(test = (df_gender$educ_max==4),yes = 1,no = 0)
 table(df_gender$educ_b)
 sjmisc::frq(df_gender$educ_b)
 
 
-theme_set(theme_bw())
+# recode nombre de hong kong
+df_gender$country_name[df_gender$country_name=="RAE de Hong Kong (China)"] <- "Hong Kong (RAE)"
+
+df_long <- 
+bind_rows(
+df_gender %>% 
+dplyr::select(id=country_name,var=eqgen_i,educ_b) %>% 
+mutate(id2="1"),
+df_gender %>% 
+dplyr::select(id=country_name,var=eqpol_i,educ_b) %>% 
+mutate(id2="2"),
+df_gender %>% 
+dplyr::select(id=country_name,var=eqpub_i,educ_b) %>% 
+mutate(id2="3")
+)
+
+df_long$id2 <- factor(x = df_long$id2,
+                           levels = 1:3,
+                           labels = c("Original","D. Políticos","P. Público"))
+# Plots........................................................................
+theme_set(new = theme_bw() %+replace% 
+            theme(axis.text = element_text(size = 13),
+                  plot.title = element_text(size = 18,hjust = 0,vjust = 0.5),
+                  axis.title.x = element_text(size = 15),
+                  strip.text.x = element_text(size = 11)
+                  )) 
+mean_gender_by_var <- 
+ggplot(df_long,aes(y=var, 
+                   x=educ_b
+                   ))+
+  stat_summary(fun.y="mean", geom="point",
+               # position="dodge"
+               )+
+  stat_summary(fun.data = mean_se, 
+               geom = "errorbar", 
+               # position="dodge",
+               width=.8)+
+  scale_x_continuous(breaks=c(0,1) ,labels = c("No \n Terc.", "Terc.")) +
+  facet_nested_wrap(~id + id2,
+             nrow = 3,
+             # ncol = 6,
+             # labeller =  label_wrap_gen(width = 10),
+             ) + 
+  xlab("Máximo nivel educacional alcanzado (padres)")+
+  ylab(NULL)
+# mean_gender_by_var
+ggsave(plot = mean_gender_by_var,filename = "mean_gender_by_var.png",
+       device = "png",units = "cm",width = 2.1,height = 1.1,scale = 30,
+       path = "output/images")
+
 mean_orig <- 
-ggplot(df_gender,aes(y=S_GENEQL, x=educ_b))+
+ggplot(df_gender,aes(y=eqgen_i, x=educ_b))+
   stat_summary(fun.y="mean", geom="point",position="dodge")+
   stat_summary(fun.data = mean_se, geom = "errorbar", position="dodge",width=.8)+
-  scale_x_continuous(breaks=c(0,1) ,labels = c("No \n univ.", "Univ.")) +
-  facet_wrap(~country_name,nrow = 3,labeller =  label_wrap_gen(width = 20)) +
+  scale_x_continuous(breaks=c(0,1) ,labels = c("No \n Terc.", "Terc.")) +
+  facet_wrap(~country_name,nrow = 3,labeller =  label_wrap_gen(width = 10)) +
   xlab("Máximo nivel educacional alcanzado (padres)")+
   ylab(NULL) +
   ggtitle("Escala original")
@@ -1005,8 +1354,8 @@ ggplot(df_gender,aes(y=eqpol_i, x=educ_b))+
   stat_summary(fun.y="mean", geom="point",position="dodge")+
   stat_summary(fun.data = mean_se, geom = "errorbar", position="dodge",width=.8)+
   # scale_y_continuous(limits = c(98,99))+
-  scale_x_continuous(breaks=c(0,1) ,labels = c("No \n univ.", "Univ.")) +
-  facet_wrap(~country_name,nrow = 3,labeller =  label_wrap_gen(width = 20)) +
+  scale_x_continuous(breaks=c(0,1) ,labels = c("No \n Terc.", "Terc.")) +
+  facet_wrap(~country_name,nrow = 3,labeller =  label_wrap_gen(width = 10)) +
   xlab("Máximo nivel educacional alcanzado (padres)")+
   ylab(NULL) + 
   ggtitle(label = "Participar en el espacio público")
@@ -1016,21 +1365,27 @@ ggplot(df_gender,aes(y=eqpub_i, x=educ_b))+
   stat_summary(fun.y="mean", geom="point",position="dodge")+
   stat_summary(fun.data = mean_se, geom = "errorbar", position="dodge",width=.8)+
   # scale_y_continuous(limits = c(99,100))+
-  scale_x_continuous(breaks=c(0,1) ,labels = c("No \n univ.", "Univ.")) +
-  facet_wrap(~country_name,nrow = 3,labeller =  label_wrap_gen(width = 20)) +
+  scale_x_continuous(breaks=c(0,1) ,labels = c("No \n Terc.", "Terc.")) +
+  facet_wrap(~country_name,nrow = 3,labeller =  label_wrap_gen(width = 10)) +
   xlab("Máximo nivel educacional alcanzado (padres)") + 
   ylab(NULL) +
   ggtitle("Igualdad de derechos políticos")  
 
 
-mean_gender<- 
-  gridExtra::grid.arrange(mean_orig,mean_eqpub, mean_eqpol, ncol=1) 
-ggsave(plot = mean_gender,filename = "mean_gender.png",
-       device = "png",units = "cm",width = 30,height = 45,
+# mean_gender<- 
+#   gridExtra::grid.arrange(mean_orig,mean_eqpub, mean_eqpol, ncol=1) 
+# ggsave(plot = mean_gender,filename = "mean_gender.png",
+#        device = "png",units = "cm",width = 30,height = 45,
+#        path = "output/images")
+
+mean_gender2<- 
+  gridExtra::grid.arrange(mean_orig,mean_eqpub, mean_eqpol, ncol=3) 
+ggsave(plot = mean_gender2,filename = "mean_gender_h.png",
+       device = "png",units = "cm",width = 2,height = 1.1,scale = 30,
        path = "output/images")
 ```
 
-```{r plots-gen-educ}
+```{r plot-scatter-gen-educ, eval=FALSE, include=FALSE}
 # genero~educacion
 rm(list=ls())
 if (!require("pacman")) install.packages("pacman") # instalar pacman
@@ -1060,17 +1415,14 @@ df_gender <-
     df_gender[[i]] <- sjmisc::rec(df_gender[[i]],rec = "rev")
   }
 
-# df_gender$educ_max <- as_character(sjlabelled::to_factor(df_gender$educ_max))
 # CFA 2 dimension:.............................................................
-
-# Evidence from previous analyses (Miranda & Castillo, 2018) indicates that the gender equality scale would consider up of two dimensions: support for equal political rights between men and women and attitudes towards the ability to participate in public space
-
 cfa_gen2 <- '
   eqpol=~ IS3G24A+IS3G24B+IS3G24E
   eqpub=~ IS3G24C+IS3G24D+IS3G24F 
   '
+var_or <- c("IS3G24A","IS3G24B","IS3G24C","IS3G24D","IS3G24E","IS3G24F") 
 fit_gen2 <- cfa(cfa_gen2,
-                data = df_gender)
+                data = df_gender, ordered = var_or)
 scores_gen2<- 
 lavaan::lavPredict(fit_gen2) %>% 
   data.frame()
@@ -1118,171 +1470,8 @@ ggsave(plot = plots_gender,filename = "plots_gender.png",
 - variable latente original
 - variable latente refinada
 - correlación de 24 países actitude~educación, indicador compuesto S_HiSCED (polyserial corr)
-
 - ttest 0 = menos de terciaria; 1 = terciaria o más
 
-
-## Actitudes país de residencia {-}
-
-```{r eval=FALSE, include=FALSE}
-rm(list=ls())
-if (!require("pacman")) install.packages("pacman") # instalar pacman
-                            # cargar librerias
-pacman::p_load(dplyr,       # Manipulacion de datos
-               car,         # recodificar variables
-               sjlabelled,  # etiquetado de variables
-               sjmisc,      # descriptivos y frecuencias
-               sjPlot,      # tablas, plots y descriptivos
-               knitr,
-               kableExtra,
-               lavaan
-               )
-load(file = here::here("input/data-proc/study_1.RData"))
-df_countries <- df_study %>% na.omit()
-
-df_country <- 
-df_countries %>% 
-  select(starts_with("IS3G27"))
-
-# names(df_country)
-# CFA 5 items:.............................................................
-
-cfa_count1 <- '
-  country=~ IS3G27A+IS3G27B+IS3G27C+IS3G27D+IS3G27E
-'
-fit_count1 <- cfa(cfa_count1,data = df_country)
-
-lavaan::fitmeasures(fit_count1)[c("chisq","df","cfi","tli","rmsea")]
-
-# CFA 4 items (sin E) :.............................................................
-
-cfa_count2 <- '
-  country=~ IS3G27A+IS3G27B+IS3G27C+IS3G27D
-'
-fit_count2 <- cfa(cfa_count2,
-                  data = df_country)
-
-lavaan::fitmeasures(fit_count2)[c("chisq","df","cfi","tli","rmsea")]
-
-
-# CFA 4 items (sin A) :.............................................................
-
-cfa_count3 <- '
-  country=~ IS3G27B+IS3G27C+IS3G27D+IS3G27E
-'
-fit_count3 <- cfa(cfa_count3,
-                  data = df_country)
-
-lavaan::fitmeasures(fit_count3)[c("chisq","df","cfi","tli","rmsea")]
-
-  # extract fit indices from models and add to table
-  sum_fit<- dplyr::bind_rows(lavaan::fitmeasures(fit_count1)[c("chisq","df","cfi","tli","rmsea")],
-                             lavaan::fitmeasures(fit_count2)[c("chisq","df","cfi","tli","rmsea")])
-
-  # Customize object
-  sum_fit$mod <- c("Escala completa",
-                   "Escala restringida (sin E)")
-  sum_fit$nobs <- c(nobs(fit_count1),nobs(fit_count2))
-  sum_fit$est <- c("ML","ML")
-  sum_fit <- dplyr::select(sum_fit,mod,nobs,est,everything())
-  colnames <- c("Dimensiones","$N$","Estimador","$\\chi^2$","gl","CFI","TLI","RMSEA")
-
-  # Create table
-  table_cfa_fits <-
-    kable(
-      sum_fit,
-      # format=table_format,
-      digits = 3,
-      booktabs = T,
-      col.names = colnames,
-      caption = "Resumen de ajuste según número de dimensiones para modelo de medición para Actitudes hacia el país de residencia",
-      escape = FALSE
-    ) %>% 
-    kable_styling(full_width = F,
-                  font_size = 10,
-                  latex_options = "HOLD_position",
-                  bootstrap_options=c("striped", "bordered"))
-  table_cfa_fits 
-```
-
-```{r inv-pais, eval=FALSE, include=FALSE}
-rm(list=ls())
-if (!require("pacman")) install.packages("pacman") # instalar pacman
-                            # cargar librerias
-pacman::p_load(dplyr,       # Manipulacion de datos
-               car,         # recodificar variables
-               sjlabelled,  # etiquetado de variables
-               sjmisc,      # descriptivos y frecuencias
-               sjPlot,      # tablas, plots y descriptivos
-               knitr,
-               kableExtra,
-               lavaan
-               )
-load(file = here::here("input/data-proc/study_1.RData"))
-df_countries <- df_study %>% na.omit()
-
-df_country <- 
-df_countries %>% 
-  select(starts_with("IS3G27"))
-
-cfa_count2 <- '
-  country=~ IS3G27A+IS3G27B+IS3G27C+IS3G27D
-'
-  inv01 <- semTools::measurementInvariance(model=cfa_count2,
-                                           data=df_country,
-                                           group="country",
-                                           estimator = "ML",
-                                           strict=TRUE,
-                                           quiet = T)
-
-  conf  <- inv01$fit.configural
-  weak  <- inv01$fit.loadings
-  strong<- inv01$fit.intercepts
-  strict<- inv01$fit.residuals
-
-  tab01<- lavaan::anova(conf,weak,strong,strict,SB.classic=TRUE) %>%
-    dplyr::as_tibble() %>%
-    dplyr::select("Chisq","Df","chisq_diff"=`Chisq diff`,"df_diff"=`Df diff`,"pvalue"=`Pr(>Chisq)`) %>%
-    dplyr::mutate(stars=gtools::stars.pval(pvalue),
-           chisqt=paste0(round(Chisq,2)," (",Df,") "),
-           decision=ifelse(pvalue>0.05,yes = "Accept",no = "Reject"),
-           model=c("Configural","Débil","Fuerte","Estricta"))
-
-  fit.meas<- dplyr::bind_rows(lavaan::fitmeasures(inv01$fit.configural,output ="matrix")[c("chisq","df","cfi","rmsea","rmsea.ci.lower","rmsea.ci.upper"),],
-                              lavaan::fitmeasures(inv01$fit.loadings,  output ="matrix")[c("chisq","df","cfi","rmsea","rmsea.ci.lower","rmsea.ci.upper"),],
-                              lavaan::fitmeasures(inv01$fit.intercepts,output ="matrix")[c("chisq","df","cfi","rmsea","rmsea.ci.lower","rmsea.ci.upper"),],
-                              lavaan::fitmeasures(inv01$fit.residuals, output ="matrix")[c("chisq","df","cfi","rmsea","rmsea.ci.lower","rmsea.ci.upper"),])
-
-  # compute differences in chisq, df, cfi and rmsea (90%, lower.ci - upper.ci )
-  fit.meas<- fit.meas %>%
-    dplyr::mutate(diff.chi2 = chisq    - lag(chisq,default = dplyr::first(chisq)),
-           diff.df   = df       - lag(df,   default = dplyr::first(df)),
-           diff.cfi  = cfi      - lag(cfi,  default = dplyr::first(cfi)),
-           diff.rmsea   = rmsea - lag(rmsea,default = dplyr::first(rmsea))) %>%
-    round(3) %>%
-    dplyr::mutate(rmsea.ci=paste0(rmsea," \n ", "(",rmsea.ci.lower,"-",rmsea.ci.upper,")"))
-
-  tab.inv<- dplyr::bind_cols(tab01,fit.meas) %>%
-    dplyr::select(model,chisqt,cfi,rmsea.ci,diff.chi2,diff.df,diff.cfi,diff.rmsea,stars,decision) %>%
-    dplyr::mutate(diff.chi2=paste0(diff.chi2," (",diff.df,") ",stars)) %>%
-    dplyr::select(model,chisqt,cfi,rmsea.ci,diff.chi2,diff.cfi,diff.rmsea,decision)
-
-col.nam <- c("Model","$\\chi^2 (\\text{df})$","CFI","RMSEA (90 CI)",
-               "$\\Delta \\chi^2 (\\Delta \\text{df}$)","$\\Delta \\text{CFI}$","$\\Delta \\text{RMSEA}$","Decision")
-  footnote <- paste0("***p < 0.001")
-
-  knitr::kable(tab.inv, col.names = col.nam, align = "l",
-        booktabs=TRUE,
-        # format = table_format,
-        escape = FALSE,
-        caption = "Invarianza multigrupo para modelo de medición de Actitudes hacia el país de residencia") %>%
-    kableExtra::kable_styling(full_width = FALSE,
-                              latex_options = "HOLD_position",
-                              bootstrap_options=c("striped", "bordered"),
-                              font_size = 10) %>%
-    kableExtra::footnote(general = footnote, footnote_as_chunk = T)
-
-```
 
 
 

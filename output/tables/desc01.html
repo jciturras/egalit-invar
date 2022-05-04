@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<style>body{background-color:white;}</style>
+
+  <link href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAABZVBMVEUAAAAdPlkcPlkbPlodPVkbO1kbPFcdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPlkdPln///+ifs4iAAAAdXRSTlMAAAAAAAAABCpZgZWZmpuhsrgdi7vv939KTE1PUlqiwSCpfR6HsBBFgwtnAhK0gBEaXgcy4Ldda/zRJuUNr6gMd/qmDsoiw6cVb6QUGbUXAxMcCgWgv0PVPsIl1vBOSUiRrRYIlv79+fv15JCPfHRzeIiCZjST6WECAAAAAWJLR0R2MWPJQQAAAAlwSFlzAABcRQAAXEUBuS1iLAAAAAd0SU1FB+QGAQEGMAe8nOwAAADrSURBVBjTJY75P0JREMXn2NWrLK1XIZH2aLEXl56ykwqPspN9ff+/e6/5ac75nPmeISL09vVbrJqm2eyOgUEChoadLrfH62Mj/sDoGGE8OBGaNKfCIBGejlDUGosjkTRTceEgPUOzWgZANudikBmi/Bw6BGh+YXFJLGKWmTpeKZjFVRVxr8koEODrG8rIlRIQWt8sV9Apja3tHQHd3Svs/yPoQJYcFvNH6CJU9WPpIVyr64rUODlV2nZmqCdgnDPqRtp+4WFNn7d16b+6viHc3t0/PHLO2/zp2WGIxsrL69v7x2fq6/vnN4OeP6dLIlhQnl/oAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIwLTA2LTAxVDAxOjA2OjQ4KzAyOjAw8gzdpAAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMC0wNi0wMVQwMTowNjo0OCswMjowMINRZRgAAABXelRYdFJhdyBwcm9maWxlIHR5cGUgaXB0YwAAeJzj8gwIcVYoKMpPy8xJ5VIAAyMLLmMLEyMTS5MUAxMgRIA0w2QDI7NUIMvY1MjEzMQcxAfLgEigSi4A6hcRdPJCNZUAAAAASUVORK5CYII=" rel="icon" type="image/x-icon" />
+  <title>Tabla resumen</title>
+  <style type="text/css">img {
+  background-color: transparent;
+  border: 0;
+}
+
+.st-table td,
+.st-table th {
+  padding: 8px;
+}
+
+.st-table > thead > tr {
+   background-color: #eeeeee;
+}
+
+.st-cross-table td {
+  text-align: center;
+}
+
+.st-descr-table td {
+  text-align: right;
+}
+
+table.st-table th {
+  text-align: center;
+}
+
+table.st-table > thead > tr {
+   background-color: #eeeeee;
+}
+
+table.st-table td span {
+  display: block;
+}
+
+table.st-table > tfoot > tr > td {
+  border:none;
+}
+
+.st-container {
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+  margin-top: 15px;
+}
+
+.st-multiline {
+  white-space: pre;
+}
+
+.st-table {
+    width: auto;
+    table-layout: auto;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    max-width: 100%;
+    background-color: transparent;
+    border-collapse: collapse;
+}
+
+.st-table > thead > tr > th,
+.st-table > tbody > tr > th,
+.st-table > tfoot > tr > th,
+.st-table > thead > tr > td,
+.st-table > tbody > tr > td,
+.st-table > tfoot > tr > td {
+  vertical-align: middle;
+}
+
+.st-table-bordered {
+  border: 1px solid #bbbbbb;
+}
+
+.st-table-bordered > thead > tr > th,
+.st-table-bordered > tbody > tr > th,
+.st-table-bordered > thead > tr > td,
+.st-table-bordered > tbody > tr > td {
+  border: 1px solid #cccccc;
+}
+
+.st-table-bordered > thead > tr > th,
+.st-table-bordered > thead > tr > td,
+.st-table thead > tr > th {
+  border-bottom: none;
+}
+
+.st-freq-table > thead > tr > th,
+.st-freq-table > tbody > tr > th,
+.st-freq-table > tfoot > tr > th,
+.st-freq-table > thead > tr > td,
+.st-freq-table > tbody > tr > td,
+.st-freq-table > tfoot > tr > td,
+.st-freq-table-nomiss > thead > tr > th,
+.st-freq-table-nomiss > tbody > tr > th,
+.st-freq-table-nomiss > tfoot > tr > th,
+.st-freq-table-nomiss > thead > tr > td,
+.st-freq-table-nomiss > tbody > tr > td,
+.st-freq-table-nomiss > tfoot > tr > td,
+.st-cross-table > thead > tr > th,
+.st-cross-table > tbody > tr > th,
+.st-cross-table > tfoot > tr > th,
+.st-cross-table > thead > tr > td,
+.st-cross-table > tbody > tr > td,
+.st-cross-table > tfoot > tr > td {
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.st-table-bordered > thead > tr > th,
+.st-table-bordered > tbody > tr > th,
+.st-table-bordered > thead > tr > td,
+.st-table-bordered > tbody > tr > td {
+  border: 1px solid #cccccc;
+}
+
+.st-table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: #ffffff;
+}
+
+.st-table-striped > tbody > tr:nth-of-type(even) {
+  background-color: #f9f9f9;
+}
+
+.st-descr-table > thead > tr > th,
+.st-descr-table > tbody > tr > th,
+.st-descr-table > thead > tr > td,
+.st-descr-table > tbody > tr > td {
+  padding-left: 24px;
+  padding-right: 24px;
+  word-wrap: break-word;
+}
+
+.st-freq-table,
+.st-freq-table-nomiss,
+.st-cross-table {
+  border: medium none;
+}
+
+.st-freq-table > thead > tr:nth-child(1) > th:nth-child(1),
+.st-cross-table > thead > tr:nth-child(1) > th:nth-child(1),
+.st-cross-table > thead > tr:nth-child(1) > th:nth-child(3) {
+  border: none;
+  background-color: #ffffff;
+  text-align: center;
+}
+
+.st-protect-top-border {
+  border-top: 1px solid #cccccc !important;
+}
+
+.st-ws-char {
+  display: inline;
+  color: #999999;
+  letter-spacing: 0.2em;
+}
+
+/* Optional classes */
+.st-small {
+  font-size: 13px;
+}
+
+.st-small td,
+.st-small th {
+  padding: 8px;
+}
+
+.st-small > thead > tr > th,
+.st-small > tbody > tr > th,
+.st-small > thead > tr > td,
+.st-small > tbody > tr > td {
+  padding-left: 12px;
+  padding-right: 12px;
+}</style>
+  <style type="text/css">/* Whole document: */
+body{
+  font-family: Times New Roman;
+  font-size: 25pt;
+}
+/* Headers */
+h1,h2,h3,h4,h5,h6{
+  font-size: 24pt;
+}</style>
+</head>
+<body>
+<div class="container st-container"><table class="table table-striped table-bordered st-table st-table-striped st-table-bordered st-multiline ">
+  <colgroup>
+    <col style="width:700px"/>
+    <col style="width:10px"/>
+    <col style="width:10px"/>
+    <col style="width:10px"/>
+    <col style="width:10px"/>
+  </colgroup>
+  <thead>
+    <tr>
+      <th align="center" class="st-protect-top-border"><strong>Etiqueta</strong></th>
+      <th align="center" class="st-protect-top-border"><strong>Estad&#0237;sticas / Valores</strong></th>
+      <th align="center" class="st-protect-top-border"><strong>Frec. (% sobre v&#0225;lidos)</strong></th>
+      <th align="center" class="st-protect-top-border"><strong>Gr&#0225;fico</strong></th>
+      <th align="center" class="st-protect-top-border"><strong>V&#0225;lido</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="left">a. Los hombres y las mujeres deben
+tener igualdad de oportunidades para
+participar en el gobierno.&#0174;</td>
+      <td align="left" style="padding:8;vertical-align:middle"><table style="border-collapse:collapse;border:none;margin:0"><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">1. Muy de acuerdo</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">2. De acuerdo</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">3. En desacuerdo</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">4. Muy en desacuerdo</td></tr></table></td>
+      <td align="left" style="padding:0;vertical-align:middle"><table style="border-collapse:collapse;border:none;margin:0"><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">577</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">0.7%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">1870</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">2.3%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">17239</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">21.0%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">62599</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">76.1%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr></table></td>
+      <td align="left" style="vertical-align:middle;padding:0;background-color:transparent;"><img style="border:none;background-color:transparent;padding:0;max-width:max-content;" src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAH4AAABmBAMAAAD/iDhNAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAD1BMVEX////9/v2mpqbw8PD///+xh0SBAAAAAnRSTlMAAHaTzTgAAAABYktHRACIBR1IAAAAB3RJTUUH5gQcBxsL2C0YTwAAAGRJREFUWMPt1LERwCAMBEFaoAXRAe6/NydOYAjEKwDDXcwmYuZTIstieDwef7lX+S7e1AN8vlQ8Ho//p4/un6iP8dY168vT5P9NPB6PX+yj++d+v6k3tfH93VU8Ho9f7KP7d3Mvn4cowcZLVGEAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjItMDQtMjhUMTE6Mjc6MTEtMDQ6MDClREgzAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDIyLTA0LTI4VDExOjI3OjExLTA0OjAw1BnwjwAAAABJRU5ErkJggg=="></td>
+      <td align="center">82285
+(100.0%)</td>
+    </tr>
+    <tr>
+      <td align="left">b. Los hombres y las mujeres deben
+tener los mismos derechos en todos los
+sentidos.&#0174;</td>
+      <td align="left" style="padding:8;vertical-align:middle"><table style="border-collapse:collapse;border:none;margin:0"><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">1. Muy de acuerdo</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">2. De acuerdo</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">3. En desacuerdo</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">4. Muy en desacuerdo</td></tr></table></td>
+      <td align="left" style="padding:0;vertical-align:middle"><table style="border-collapse:collapse;border:none;margin:0"><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">690</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">0.8%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">3904</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">4.7%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">17612</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">21.4%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">60079</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">73.0%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr></table></td>
+      <td align="left" style="vertical-align:middle;padding:0;background-color:transparent;"><img style="border:none;background-color:transparent;padding:0;max-width:max-content;" src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAHoAAABmBAMAAAD2Y5g3AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAD1BMVEX////9/v2mpqbw8PD///+xh0SBAAAAAnRSTlMAAHaTzTgAAAABYktHRACIBR1IAAAAB3RJTUUH5gQcBxsL2C0YTwAAAGVJREFUWMPt1MEJwCAQRFFbsAQ3HWj/vcVrAoLOErLo/2ffZYVJ6dwsS6HRaPSmWsMRtPV0fbVW0Wg0Opb27Zogt9D2qizp/mOP0Gg0+n/t27W5xxG1aQ1uPldFo9HoD7Vv107sBpXMHai9TNxXAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIyLTA0LTI4VDExOjI3OjExLTA0OjAwpURIMwAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMi0wNC0yOFQxMToyNzoxMS0wNDowMNQZ8I8AAAAASUVORK5CYII="></td>
+      <td align="center">82285
+(100.0%)</td>
+    </tr>
+    <tr>
+      <td align="left">c. Las mujeres deben permanecer fuera
+de la pol&#0237;tica.</td>
+      <td align="left" style="padding:8;vertical-align:middle"><table style="border-collapse:collapse;border:none;margin:0"><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">1. Muy de acuerdo</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">2. De acuerdo</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">3. En desacuerdo</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">4. Muy en desacuerdo</td></tr></table></td>
+      <td align="left" style="padding:0;vertical-align:middle"><table style="border-collapse:collapse;border:none;margin:0"><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">4967</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">6.0%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">7820</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">9.5%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">23936</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">29.1%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">45562</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">55.4%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr></table></td>
+      <td align="left" style="vertical-align:middle;padding:0;background-color:transparent;"><img style="border:none;background-color:transparent;padding:0;max-width:max-content;" src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAGAAAABmBAMAAADG74kWAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAD1BMVEX////9/v2mpqbw8PD///+xh0SBAAAAAnRSTlMAAHaTzTgAAAABYktHRACIBR1IAAAAB3RJTUUH5gQcBxsL2C0YTwAAAGpJREFUWMPt1MENgCAMRmFWYATrBnT/3YToxaSR9iLVvHfmu/xJKeUfyah6usCuqg0AAGQF4Zt2vX0XyNkWWqkHAABygvBNzx/mB2I2n/VeAwAASUD4pqu7xf+S1dNK5nIAAGABCN/01zsAqRrMc94hPuUAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjItMDQtMjhUMTE6Mjc6MTEtMDQ6MDClREgzAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDIyLTA0LTI4VDExOjI3OjExLTA0OjAw1BnwjwAAAABJRU5ErkJggg=="></td>
+      <td align="center">82285
+(100.0%)</td>
+    </tr>
+    <tr>
+      <td align="left">d. Cuando no hay muchos puestos de
+trabajo disponibles, los hombres deben
+tener m&#0225;s derecho a un trabajo que las
+mujeres.</td>
+      <td align="left" style="padding:8;vertical-align:middle"><table style="border-collapse:collapse;border:none;margin:0"><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">1. Muy de acuerdo</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">2. De acuerdo</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">3. En desacuerdo</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">4. Muy en desacuerdo</td></tr></table></td>
+      <td align="left" style="padding:0;vertical-align:middle"><table style="border-collapse:collapse;border:none;margin:0"><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">7028</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">8.5%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">10188</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">12.4%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">23684</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">28.8%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">41385</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">50.3%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr></table></td>
+      <td align="left" style="vertical-align:middle;padding:0;background-color:transparent;"><img style="border:none;background-color:transparent;padding:0;max-width:max-content;" src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAFgAAABmBAMAAAC9y0vaAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAD1BMVEX////9/v2mpqbw8PD///+xh0SBAAAAAnRSTlMAAHaTzTgAAAABYktHRACIBR1IAAAAB3RJTUUH5gQcBxsL2C0YTwAAAGlJREFUWMPt1NEJgDAMRdGukBGMG9T9d1NRQVRqHla0cO/3+Qq8pNRmvmTlVtwPcxkMBtfD0gYt1OvYt7rwNabAYHAtLG3QQv0L+2V3p9uXwWDwAyxt0EJ99DeOla5xug4YDBawtMHWGgEmGbN7OJi7YgAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyMi0wNC0yOFQxMToyNzoxMS0wNDowMKVESDMAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjItMDQtMjhUMTE6Mjc6MTEtMDQ6MDDUGfCPAAAAAElFTkSuQmCC"></td>
+      <td align="center">82285
+(100.0%)</td>
+    </tr>
+    <tr>
+      <td align="left">e. Los hombres y las mujeres deben
+obtener la igualdad de salario cuando
+est&#0225;n haciendo los mismos trabajos. &#0174;</td>
+      <td align="left" style="padding:8;vertical-align:middle"><table style="border-collapse:collapse;border:none;margin:0"><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">1. Muy de acuerdo</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">2. De acuerdo</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">3. En desacuerdo</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">4. Muy en desacuerdo</td></tr></table></td>
+      <td align="left" style="padding:0;vertical-align:middle"><table style="border-collapse:collapse;border:none;margin:0"><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">1530</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">1.9%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">4466</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">5.4%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">17451</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">21.2%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">58838</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">71.5%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr></table></td>
+      <td align="left" style="vertical-align:middle;padding:0;background-color:transparent;"><img style="border:none;background-color:transparent;padding:0;max-width:max-content;" src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAHgAAABmBAMAAADylkgKAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAD1BMVEX////9/v2mpqbw8PD///+xh0SBAAAAAnRSTlMAAHaTzTgAAAABYktHRACIBR1IAAAAB3RJTUUH5gQcBxsL2C0YTwAAAG9JREFUWMPt1cEJwCAMRmFX6AiNG5j9d2sLPYj0EBNBqe+d/S4Kvyntmcjh6MW5gMFg8FQc2jAPXQDL3enFWVXBYDB4Ig5tWLf7AZamLvw8VZXxwwWDweBhOLRhtsPLYXH1fdu2ChgMBg/DoQ3brQuV+RdqrW8I6gAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyMi0wNC0yOFQxMToyNzoxMS0wNDowMKVESDMAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjItMDQtMjhUMTE6Mjc6MTEtMDQ6MDDUGfCPAAAAAElFTkSuQmCC"></td>
+      <td align="center">82285
+(100.0%)</td>
+    </tr>
+    <tr>
+      <td align="left">f. Los hombres est&#0225;n mejor calificados
+para ser l&#0237;deres pol&#0237;ticos que las
+mujeres.</td>
+      <td align="left" style="padding:8;vertical-align:middle"><table style="border-collapse:collapse;border:none;margin:0"><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">1. Muy de acuerdo</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">2. De acuerdo</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">3. En desacuerdo</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">4. Muy en desacuerdo</td></tr></table></td>
+      <td align="left" style="padding:0;vertical-align:middle"><table style="border-collapse:collapse;border:none;margin:0"><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">6810</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">8.3%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">11578</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">14.1%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">26097</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">31.7%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">37800</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">45.9%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr></table></td>
+      <td align="left" style="vertical-align:middle;padding:0;background-color:transparent;"><img style="border:none;background-color:transparent;padding:0;max-width:max-content;" src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAFEAAABmBAMAAABB3mAQAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAD1BMVEX////9/v2mpqbw8PD///+xh0SBAAAAAnRSTlMAAHaTzTgAAAABYktHRACIBR1IAAAAB3RJTUUH5gQcBxsL2C0YTwAAAGZJREFUWMPt08EJgDAQRNGUYDrQtYPYf28SETSEZOcSMPj/+V12YUKYJ7vaYrvllvuRQyKRtdR3FN1GSnuSbs8lJBJZSH1H0e0b0hr1vlSUkEikvqMRK9alua39218hkX+V+o5m6ATik58eHWMgpwAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyMi0wNC0yOFQxMToyNzoxMS0wNDowMKVESDMAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjItMDQtMjhUMTE6Mjc6MTEtMDQ6MDDUGfCPAAAAAElFTkSuQmCC"></td>
+      <td align="center">82285
+(100.0%)</td>
+    </tr>
+    <tr>
+      <td align="left">Apoyo de los estudiantes a la igualdad
+de g&#0233;nero (original)</td>
+      <td align="left" style="padding:8;vertical-align:middle"><table style="border-collapse:collapse;border:none;margin:0"><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">Media (d-s) : 51.6 (9.8)</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">min &le; mediana &le; max:</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">16.3 &le; 48.7 &le; 63.9</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">RI (CV) : 21.3 (0.2)</td></tr></table></td>
+      <td align="left" style="vertical-align:middle">19 valores distintos</td>
+      <td align="left" style="vertical-align:middle;padding:0;background-color:transparent;"><img style="border:none;background-color:transparent;padding:0;max-width:max-content;" src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAJgAAABuBAMAAAApJ8cWAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAD1BMVEX////9/v2mpqbw8PD///+xh0SBAAAAAnRSTlMAAHaTzTgAAAABYktHRACIBR1IAAAAB3RJTUUH5gQcBxsMRkmN7AAAAJxJREFUaN7t00sKxCAQhGGvMN5gyhuk73+3vKaRQDaJBePiLxp3fpSKpZA3+QynSvJhEQsYGBgYGBgYGBgYGBgYGBgYGBjYzFiVvj4sYhpMkg9rsdxh6pc3jrVecRrsPKAJO5kBrOabWrD49fNhez8ftq0m7KjlwnJmwvKAFiwuAwYG9n9s++I+rO17LdhRy4KlZMFSeobJkkLeZAWw7FV2TDVVkgAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyMi0wNC0yOFQxMToyNzoxMi0wNDowMJSsUq4AAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjItMDQtMjhUMTE6Mjc6MTItMDQ6MDDl8eoSAAAAAElFTkSuQmCC"></td>
+      <td align="center">82285
+(100.0%)</td>
+    </tr>
+    <tr>
+      <td align="left">Puntaje factorial: Igualdad de derechos
+pol&#0237;ticos</td>
+      <td align="left" style="padding:8;vertical-align:middle"><table style="border-collapse:collapse;border:none;margin:0"><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">Media (d-s) : 88.2 (16.2)</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">min &le; mediana &le; max:</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">0 &le; 97 &le; 100</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">RI (CV) : 19.5 (0.2)</td></tr></table></td>
+      <td align="left" style="vertical-align:middle">2161 valores distintos</td>
+      <td align="left" style="vertical-align:middle;padding:0;background-color:transparent;"><img style="border:none;background-color:transparent;padding:0;max-width:max-content;" src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAJgAAABuBAMAAAApJ8cWAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAD1BMVEX////9/v2mpqbw8PD///+xh0SBAAAAAnRSTlMAAHaTzTgAAAABYktHRACIBR1IAAAAB3RJTUUH5gQcBxsMRkmN7AAAAI1JREFUaN7t2VEKgCAMxnGvkDdo3aDd/245KEqSoDmo6P+9iA/7oXNvpkQ8GbojJWHYpDqDgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYF9HMsiEoep6isw+xUKw6zuV5jNxBiGFcWeIwyznRPbhr2+nxfbyw/368fOyzNYbnbJizW7dAuz86y5UmpMQpKIJws+iSy9HZozOwAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyMi0wNC0yOFQxMToyNzoxMi0wNDowMJSsUq4AAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjItMDQtMjhUMTE6Mjc6MTItMDQ6MDDl8eoSAAAAAElFTkSuQmCC"></td>
+      <td align="center">82285
+(100.0%)</td>
+    </tr>
+    <tr>
+      <td align="left">Puntaje factorial: Participar en el
+espacio p&#0250;blico</td>
+      <td align="left" style="padding:8;vertical-align:middle"><table style="border-collapse:collapse;border:none;margin:0"><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">Media (d-s) : 76.5 (23.9)</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">min &le; mediana &le; max:</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">0 &le; 80.2 &le; 100</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">RI (CV) : 38.8 (0.3)</td></tr></table></td>
+      <td align="left" style="vertical-align:middle">2161 valores distintos</td>
+      <td align="left" style="vertical-align:middle;padding:0;background-color:transparent;"><img style="border:none;background-color:transparent;padding:0;max-width:max-content;" src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAJgAAABuBAMAAAApJ8cWAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAD1BMVEX////9/v2mpqbw8PD///+xh0SBAAAAAnRSTlMAAHaTzTgAAAABYktHRACIBR1IAAAAB3RJTUUH5gQcBxsMRkmN7AAAALtJREFUaN7t2GEOgyAMhmGusN5Ad4P1/ncbhCaIIzpKkyXL+/1RiDyh2PjDlIgnj+XsOWHYU/UFBgYGBgYGBgYGBgYGBgYGBgYGBgYGFoeV39hhWFkHNo/ld7CFYaoairUOkXy3iLWjExv9CWan1GNl0oPZ8h47jH6ASavPusCW96MbTGqny8cmhpc7rHZ6ONZXtIhdKd9jtZFcmLSPy6EdvZgVdj4iN9ZtaRUbPT2HlcJGW5rH9pAk4skbkZFaCV4r5SkAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjItMDQtMjhUMTE6Mjc6MTItMDQ6MDCUrFKuAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDIyLTA0LTI4VDExOjI3OjEyLTA0OjAw5fHqEgAAAABJRU5ErkJggg=="></td>
+      <td align="center">82285
+(100.0%)</td>
+    </tr>
+    <tr>
+      <td align="left">Nivel educacional (Padres)</td>
+      <td align="left" style="padding:8;vertical-align:middle"><table style="border-collapse:collapse;border:none;margin:0"><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">1. Menos de terciaria</td></tr><tr style="background-color:transparent"><td style="padding:0;margin:0;border:0" align="left">2. Terciaria o m&#0225;s</td></tr></table></td>
+      <td align="left" style="padding:0;vertical-align:middle"><table style="border-collapse:collapse;border:none;margin:0"><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">50242</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">61.1%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">32043</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">38.9%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr></table></td>
+      <td align="left" style="vertical-align:middle;padding:0;background-color:transparent;"><img style="border:none;background-color:transparent;padding:0;max-width:max-content;" src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAGgAAAA3BAMAAAAS6hKwAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAD1BMVEX////9/v2mpqbw8PD///+xh0SBAAAAAnRSTlMAAHaTzTgAAAABYktHRACIBR1IAAAAB3RJTUUH5gQcBxsNMU69egAAAD5JREFUSMdjYBieQIkkANWkbEwCMBrVNKppVNNI00RWwSJIEqC7JrxeUMShCW/ojWoa1TSqacRrIqtgGW4AAGSMX5xV98BTAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIyLTA0LTI4VDExOjI3OjEzLTA0OjAwMttZGgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMi0wNC0yOFQxMToyNzoxMy0wNDowMEOG4aYAAAAASUVORK5CYII="></td>
+      <td align="center">82285
+(100.0%)</td>
+    </tr>
+  </tbody>
+</table></div>
+</body>
+</html>
